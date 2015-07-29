@@ -1,0 +1,8 @@
+[package]
+name = "nbtrs"
+version = "0.1.0"
+authors = ["Andrew Chin <achin@eminence32.net>"]
+
+[dependencies]
+flate2 = "0.2"
+byteorder = "0.3"
