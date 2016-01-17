@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
-#![feature(map_in_place)]
 
 extern crate flate2;
 extern crate byteorder;
@@ -202,7 +201,7 @@ fn test_tag_byte() {
 fn test_tag_byte_array() {
     use std::io::Cursor;
 
-    let data: Vec<u8> = vec!(7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0, 3, 69, -6, 123);
+    let data: Vec<u8> = vec!(7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0, 3, 69, 250, 123);
     let mut cur = Cursor::new(data);
     let tag = NBT::NamedTag::parse(&mut cur);
     assert_eq!(tag.name, "hello");
