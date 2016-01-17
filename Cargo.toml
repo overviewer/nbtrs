@@ -6,3 +6,5 @@ authors = ["Andrew Chin <achin@eminence32.net>"]
 [dependencies]
 flate2 = "0.2"
 byteorder = "0.3"
+serde = "0.6"
+serde_macros = "0.6"
