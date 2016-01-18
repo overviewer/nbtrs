@@ -1,6 +1,35 @@
-use std::io::{Read};
+use std::io::Read;
+use std::io;
 use std::collections::HashMap;
+use std::string;
+use std::convert::From;
 use byteorder::{ReadBytesExt, BigEndian};
+use byteorder;
+
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    BadEncoding(string::FromUtf8Error),
+    UnexpectedEOF,
+    UnexpectedTag(u8),
+}
+
+impl From<byteorder::Error> for Error {
+    fn from(err: byteorder::Error) -> Error {
+        match err {
+            byteorder::Error::UnexpectedEOF => Error::UnexpectedEOF,
+            byteorder::Error::Io(e) => From::from(e),
+        }
+    }
+}
+
+impl From<string::FromUtf8Error> for Error {
+    fn from(err: string::FromUtf8Error) -> Error { Error::BadEncoding(err) }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error { Error::Io(err) }
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Tag {
@@ -18,65 +47,65 @@ pub enum Tag {
 }
 
 impl Tag {
-    pub fn parse_file<R>(r: &mut R) -> (String, Tag) where R: Read {
-        let ty = r.read_u8().unwrap();
-        let name = Tag::read_string(r);
-        let tag = Tag::parse_tag(r, Some(ty));
-        (name, tag)
+    pub fn parse_file<R>(r: &mut R) -> Result<(String, Tag), Error> where R: Read {
+        let ty = try!(r.read_u8());
+        let name = try!(Tag::read_string(r));
+        let tag = try!(Tag::parse_tag(r, Some(ty)));
+        Ok((name, tag))
     }
 
-    pub fn parse_tag<R>(r: &mut R, tag_type: Option<u8>) -> Tag where R: Read {
-        match tag_type.unwrap_or_else(|| r.read_u8().unwrap()) {
+    pub fn parse_tag<R>(r: &mut R, tag_type: Option<u8>) -> Result<Tag, Error> where R: Read {
+        let tag_type = try!(tag_type.map_or_else(|| r.read_u8(), Ok));
+        Ok(match tag_type {
             0 => Tag::TagEnd,
-            1 => Tag::TagByte(r.read_i8().unwrap()),
-            2 => Tag::TagShort(r.read_i16::<BigEndian>().unwrap()),
-            3 => Tag::TagInt(r.read_i32::<BigEndian>().unwrap()),
-            4 => Tag::TagLong(r.read_i64::<BigEndian>().unwrap()),
-            5 => Tag::TagFloat(r.read_f32::<BigEndian>().unwrap()),
-            6 => Tag::TagDouble(r.read_f64::<BigEndian>().unwrap()),
+            1 => Tag::TagByte(try!(r.read_i8())),
+            2 => Tag::TagShort(try!(r.read_i16::<BigEndian>())),
+            3 => Tag::TagInt(try!(r.read_i32::<BigEndian>())),
+            4 => Tag::TagLong(try!(r.read_i64::<BigEndian>())),
+            5 => Tag::TagFloat(try!(r.read_f32::<BigEndian>())),
+            6 => Tag::TagDouble(try!(r.read_f64::<BigEndian>())),
             7 => { // TAG_Byte_Array 
-                let len = r.read_u32::<BigEndian>().unwrap();
+                let len = try!(r.read_u32::<BigEndian>());
                 let mut buf = vec![0; len as usize];
-                r.read_exact(&mut buf).unwrap();
+                try!(r.read_exact(&mut buf));
                 Tag::TagByteArray(buf)
             }
             8 => { // TAG_String
-                let s = Tag::read_string(r);
+                let s = try!(Tag::read_string(r));
                 Tag::TagString(s)
             }
             9 => { // TAG_List
-                let ty = r.read_u8().unwrap();
-                let len = r.read_u32::<BigEndian>().unwrap();
+                let ty = try!(r.read_u8());
+                let len = try!(r.read_u32::<BigEndian>());
                 let mut v = Vec::with_capacity(len as usize);
                 for _ in 0..len {
-                    let t = Tag::parse_tag(r, Some(ty));
+                    let t = try!(Tag::parse_tag(r, Some(ty)));
                     v.push(t)
                 }
                 Tag::TagList(v)
-
             }
             10 => { // TAG_Compound
                 let mut v = HashMap::new();
                 loop {
-                    let ty = r.read_u8().unwrap();
+                    let ty = try!(r.read_u8());
                     if ty == 0 {
                         break;
                     }
-                    let name = Tag::read_string(r);
-                    let value = Tag::parse_tag(r, Some(ty));
+                    let name = try!(Tag::read_string(r));
+                    let value = try!(Tag::parse_tag(r, Some(ty)));
                     v.insert(name, value);
                 }
                 Tag::TagCompound(v)
             }
-            x => panic!(">>> Unexpected tag type {:?}", x)
-        }
+            x => return Err(Error::UnexpectedTag(x))
+        })
     }
 
-    fn read_string<R>(r: &mut R) -> String where R: Read {
-        let len = r.read_u16::<BigEndian>().unwrap();
+    fn read_string<R>(r: &mut R) -> Result<String, Error> where R: Read {
+        let len = try!(r.read_u16::<BigEndian>());
         let mut buf = vec![0; len as usize];
-        r.read_exact(&mut buf).unwrap();
-        String::from_utf8(buf).unwrap()
+        try!(r.read_exact(&mut buf));
+        Ok(try!(String::from_utf8(buf)))
     }
 
     pub fn get_name(&self) -> &'static str {
@@ -96,7 +125,7 @@ impl Tag {
     }
 
     pub fn pretty_print(&self, indent: usize, name: Option<&String>) {
-        let name_s = name.map(|s| format!("9\"{}\")", s)).unwrap_or("".to_string());
+        let name_s = name.map_or("".to_string(), |s| format!("9\"{}\")", s));
 
         match self {
             &Tag::TagCompound(ref v) => { println!("{1:0$}{2}{3} : {4} entries\n{1:0$}{{", indent,"", self.get_name(), name_s, v.len()); 
@@ -136,7 +165,7 @@ mod test {
         use std::io::Cursor;
 
         let mut cur = Cursor::new(data);
-        let (n, t) = Tag::parse_file(&mut cur);
+        let (n, t) = Tag::parse_file(&mut cur).unwrap();
         assert_eq!(n, name);
         assert_eq!(t, tag);
     }
@@ -151,7 +180,7 @@ mod test {
         let level_dat = fs::File::open("level.dat").unwrap();
 
         let mut decoder = GzDecoder::new(level_dat).unwrap();
-        let (_, tag) = Tag::parse_file(&mut decoder);
+        let (_, tag) = Tag::parse_file(&mut decoder).unwrap();
         tag.pretty_print(0, None);
     }
 
