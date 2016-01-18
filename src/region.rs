@@ -1,11 +1,14 @@
 use std::io::{Read, Seek,Cursor, SeekFrom};
 use byteorder;
 use byteorder::{BigEndian, ReadBytesExt};
-use ::nbt;
 use flate2;
 use std::convert::From;
 use std::error;
 use std::fmt;
+
+use ::nbt;
+use ::error as nbt_error;
+
 
 pub struct Region<T>
 where T: Read + Seek {
@@ -23,47 +26,11 @@ where T: Read + Seek {
     cursor: Box<T>
 }
 
-#[derive(Debug)]
-pub struct RegionError {
-    msg: &'static str,
-    cause: Option<Box<error::Error>>
-}
-
-impl ::std::error::Error for RegionError {
-    fn description(&self) -> &str { self.msg }
-    fn cause(&self) -> Option<&error::Error> { 
-        if let Some(ref cause) = self.cause {
-            Some(cause.as_ref())
-        } else { None }
-    }
-}
-
-impl fmt::Display for RegionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if let Some(ref cause) = self.cause {
-            writeln!(f, "RegionError: {}: {}", self.msg, cause.description())
-        } else {
-            writeln!(f, "RegionError: {}", self.msg)
-        }
-    }
-}
-
-impl From<byteorder::Error> for RegionError {
-    fn from(e: byteorder::Error) -> RegionError {
-        RegionError {msg: "Failed to read bytes", cause: Some(Box::new(e))}
-    }
-}
-
-impl From<::std::io::Error> for RegionError {
-    fn from(e: ::std::io::Error) -> RegionError {
-        RegionError {msg: "IO Failure", cause: Some(Box::new(e))}
-    }
-}
 
 
 impl<R> Region<R>
 where R: Read + Seek {
-    pub fn new(mut r: R) -> Result<Region<R>, RegionError> {
+    pub fn new(mut r: R) -> Result<Region<R>, nbt_error::Error> {
 
 
         let mut offsets  = Vec::with_capacity(1024);
@@ -114,7 +81,7 @@ where R: Read + Seek {
         self.offsets.get(idx).map_or(false, |v| *v > 0)
     }
 
-    pub fn load_chunk(&mut self, x: u32, z: u32) -> Result<nbt::Tag, RegionError> {
+    pub fn load_chunk(&mut self, x: u32, z: u32) -> Result<nbt::Tag, nbt_error::Error> {
         let idx = (x%32 + (z%32) *32 ) as usize;
         
         let offset = self.get_chunk_offset(x, z);
