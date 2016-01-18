@@ -19,6 +19,100 @@ pub enum Tag {
     TagCompound(HashMap<String, Tag>),
 }
 
+// trait to simplify grabbing nested NBT data
+pub trait Taglike<'t> : Sized {
+    fn map_tag<F, T>(self, f: F) -> Result<T, Error> where F: FnOnce(&'t Tag) -> Result<T, Error>;
+
+    // the rest of these are defaults that work, relying on
+    // the implementation for Tag
+    fn as_i8(self) -> Result<i8, Error> { self.map_tag(|t| t.as_i8()) }
+    fn as_i16(self) -> Result<i16, Error> { self.map_tag(|t| t.as_i16()) }
+    fn as_i32(self) -> Result<i32, Error> { self.map_tag(|t| t.as_i32()) }
+    fn as_i64(self) -> Result<i64, Error> { self.map_tag(|t| t.as_i64()) }
+    fn as_f32(self) -> Result<f32, Error> { self.map_tag(|t| t.as_f32()) }
+    fn as_f64(self) -> Result<f64, Error> { self.map_tag(|t| t.as_f64()) }
+    fn as_bytes(self) -> Result<&'t Vec<u8>, Error> { self.map_tag(|t| t.as_bytes()) }
+    fn as_string(self) -> Result<&'t String, Error> { self.map_tag(|t| t.as_string()) }
+    fn as_list(self) -> Result<&'t Vec<Tag>, Error> { self.map_tag(|t| t.as_list()) }
+    fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> { self.map_tag(|t| t.as_map()) }
+
+    // and now everything below this is defined in terms of the above
+    fn index(self, index: usize) -> Result<&'t Tag, Error> {
+        self.as_list().and_then(|v| {
+            v.get(index).ok_or_else(|| Error::InvalidIndex(index))
+        })
+    }
+    fn key(self, key: &str) -> Result<&'t Tag, Error> {
+        self.as_map().and_then(|m| {
+            m.get(key).ok_or_else(|| Error::InvalidKey(key.to_string()))
+        })
+    }
+}
+
+// a helper to define as_i8, etc.
+macro_rules! simple_getter {
+    ($name:ident, $r:ty, $pat:path) => {
+        fn $name(self) -> Result<$r, Error> {
+            if let &$pat(v) = self {
+                Ok(v)
+            } else {
+                Err(Error::UnexpectedType)
+            }
+        }
+    };
+}
+
+// &Tags are taglike
+impl<'t> Taglike<'t> for &'t Tag {
+    fn map_tag<F, T>(self, f: F) -> Result<T, Error> where F: FnOnce(&'t Tag) -> Result<T, Error> {
+        f(self)
+    }
+    
+    simple_getter!(as_i8, i8, Tag::TagByte);
+    simple_getter!(as_i16, i16, Tag::TagShort);
+    simple_getter!(as_i32, i32, Tag::TagInt);
+    simple_getter!(as_i64, i64, Tag::TagLong);
+    simple_getter!(as_f32, f32, Tag::TagFloat);
+    simple_getter!(as_f64, f64, Tag::TagDouble);
+
+    fn as_bytes(self) -> Result<&'t Vec<u8>, Error> {
+        if let &Tag::TagByteArray(ref v) = self {
+            Ok(v)
+        } else {
+            Err(Error::UnexpectedType)
+        }
+    }
+    fn as_string(self) -> Result<&'t String, Error> {
+        if let &Tag::TagString(ref v) = self {
+            Ok(v)
+        } else {
+            Err(Error::UnexpectedType)
+        }
+    }
+    fn as_list(self) -> Result<&'t Vec<Tag>, Error> {
+        if let &Tag::TagList(ref v) = self {
+            Ok(v)
+        } else {
+            Err(Error::UnexpectedType)
+        }
+    }
+    fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> {
+        if let &Tag::TagCompound(ref v) = self {
+            Ok(v)
+        } else {
+            Err(Error::UnexpectedType)
+        }
+    }
+}
+
+// Results containing Taglike things are Taglike
+impl<'t, T> Taglike<'t> for Result<T, Error> where T: Taglike<'t> {
+    fn map_tag<F, R>(self, f: F) -> Result<R, Error> where F: FnOnce(&'t Tag) -> Result<R, Error> {
+        self.and_then(|t| t.map_tag(f))
+    }
+}
+
+// now, on to actually parsing the things
 impl Tag {
     pub fn parse_file<R>(r: &mut R) -> Result<(String, Tag), Error> where R: Read {
         let ty = try!(r.read_u8());
@@ -155,6 +249,7 @@ mod test {
         let mut decoder = GzDecoder::new(level_dat).unwrap();
         let (_, tag) = Tag::parse_file(&mut decoder).unwrap();
         tag.pretty_print(0, None);
+        println!("{}", tag.key("Data").key("thundering").as_i8().unwrap());
     }
 
     #[test]
