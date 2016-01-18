@@ -1,10 +1,6 @@
 use std::io::{Read, Seek,Cursor, SeekFrom};
-use byteorder;
 use byteorder::{BigEndian, ReadBytesExt};
 use flate2;
-use std::convert::From;
-use std::error;
-use std::fmt;
 
 use ::nbt;
 use ::error as nbt_error;
@@ -82,8 +78,6 @@ where R: Read + Seek {
     }
 
     pub fn load_chunk(&mut self, x: u32, z: u32) -> Result<nbt::Tag, nbt_error::Error> {
-        let idx = (x%32 + (z%32) *32 ) as usize;
-        
         let offset = self.get_chunk_offset(x, z);
 
         try!(self.cursor.seek(SeekFrom::Start(offset as u64)));
@@ -96,7 +90,7 @@ where R: Read + Seek {
         let compressed_data = {
             let mut v: Vec<u8> = Vec::with_capacity(total_len- 1);
             v.resize(total_len-1, 0);
-            self.cursor.read_exact(&mut v);
+            try!(self.cursor.read_exact(&mut v));
             v
         };
 
@@ -139,8 +133,8 @@ fn test_region() {
 
     let level = tag.key("Level").unwrap();
     let last_update = level.key("LastUpdate").as_i64().unwrap();
-    let zPos = level.key("zPos").as_i32().unwrap();
+    let z_pos = level.key("zPos").as_i32().unwrap();
     assert_eq!(last_update, 137577);
-    assert_eq!(zPos, 0);
+    assert_eq!(z_pos, 0);
     level.pretty_print(0, None);
 }

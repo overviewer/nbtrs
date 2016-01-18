@@ -260,9 +260,7 @@ mod test {
     #[test]
     fn test_level_dat() {
         use flate2::read::{GzDecoder};
-        use std::path::Path;
         use std::fs;
-        use std::io::{Read, Bytes};
 
         let level_dat = fs::File::open("level.dat").unwrap();
 

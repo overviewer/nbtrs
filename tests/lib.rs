@@ -3,7 +3,7 @@ extern crate flate2;
 
 use std::path::Path;
 use std::fs;
-use std::io::{Read, Bytes};
+use std::io::{Read};
 use flate2::read::{GzDecoder};
 
 
