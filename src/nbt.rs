@@ -211,7 +211,7 @@ impl Tag {
     }
 
     pub fn pretty_print(&self, indent: usize, name: Option<&String>) {
-        let name_s = name.map_or("".to_string(), |s| format!("9\"{}\")", s));
+        let name_s = name.map_or("".to_string(), |s| format!("(\"{}\")", s));
 
         match self {
             &Tag::TagCompound(ref v) => { println!("{1:0$}{2}{3} : {4} entries\n{1:0$}{{", indent,"", self.get_name(), name_s, v.len()); 
