@@ -141,80 +141,54 @@ where R: Read {
     String::from_utf8(s2).unwrap()
 }
 
-#[test]
-fn test_level_dat() {
-    use flate2::read::{GzDecoder};
-    use std::path::Path;
-    use std::fs;
-    use std::io::{Read, Bytes};
+#[cfg(test)]
+mod test {
+    use super::*;
 
-    let level_dat_path = Path::new("level.dat");
-    let level_dat = fs::File::open(&level_dat_path).unwrap();
+    fn test_tag(data: Vec<u8>, name: &str, tag: Tag) {
+        use std::io::Cursor;
 
-    let mut decoder: GzDecoder<fs::File> = GzDecoder::new(level_dat).unwrap();
-    let (_, tag) = Tag::parse_file(&mut decoder);
-    tag.pretty_print(0, None);
-}
-
-#[test]
-fn test_tag_byte() {
-    use std::io::Cursor;
-
-    let data: Vec<u8> = vec!(1, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 69);
-    let mut cur = Cursor::new(data);
-    let (name, tag) = Tag::parse_file(&mut cur);
-    assert_eq!(name, "hello");
-    if let Tag::TagByte(b) = tag {
-        assert_eq!(b, 69);
-    } else {
-        panic!("Unexpected tag type!");
+        let mut cur = Cursor::new(data);
+        let (n, t) = Tag::parse_file(&mut cur);
+        assert_eq!(n, name);
+        assert_eq!(t, tag);
     }
-}
+    
+    #[test]
+    fn test_level_dat() {
+        use flate2::read::{GzDecoder};
+        use std::path::Path;
+        use std::fs;
+        use std::io::{Read, Bytes};
 
-#[test]
-fn test_tag_byte_array() {
-    use std::io::Cursor;
+        let level_dat = fs::File::open("level.dat").unwrap();
 
-    let data: Vec<u8> = vec!(7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0, 3, 69, 250, 123);
-    let mut cur = Cursor::new(data);
-    let (name, tag) = Tag::parse_file(&mut cur);
-    assert_eq!(name, "hello");
-    if let Tag::TagByteArray(bytes) = tag {
-        assert_eq!(bytes, vec!(69, -6, 123));
-    } else {
-        panic!("Unexpected tag type!");
-    }
-}
-
-#[test]
-fn test_tag_string() {
-    use std::io::Cursor;
-
-    let data: Vec<u8> = vec!(8, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 3, 'c' as u8, 'a' as u8, 't' as u8);
-    let mut cur = Cursor::new(data);
-    let (name , tag) = Tag::parse_file(&mut cur);
-    assert_eq!(name, "hello");
-    if let Tag::TagString(s) = tag {
-        assert_eq!(s, "cat");
-    } else {
-        panic!("Unexpected tag type!");
-    }
-}
-
-#[test]
-fn test_tag_list() {
-    use std::io::Cursor;
-    let data: Vec<u8> = vec!(9, 0, 2, 'h' as u8, 'i' as u8, 1, 0, 0, 0, 3, 1, 2, 3);
-    let mut cur = Cursor::new(data);
-    let (name, tag) = Tag::parse_file(&mut cur);
-    assert_eq!(name, "hi");
-    if let Tag::TagList(data) = tag {
-        assert_eq!(data.len(), 3);
-        assert_eq!(data[0], Tag::TagByte(1));
-        assert_eq!(data[1], Tag::TagByte(2));
-        assert_eq!(data[2], Tag::TagByte(3));
-    } else {
-        panic!("Unexpected tag type");
+        let mut decoder: GzDecoder<fs::File> = GzDecoder::new(level_dat).unwrap();
+        let (_, tag) = Tag::parse_file(&mut decoder);
+        tag.pretty_print(0, None);
     }
 
+    #[test]
+    fn test_tag_byte() {
+        let data: Vec<u8> = vec!(1, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 69);
+        test_tag(data, "hello", Tag::TagByte(69));
+    }
+
+    #[test]
+    fn test_tag_byte_array() {
+        let data: Vec<u8> = vec!(7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0, 3, 69, 250, 123);
+        test_tag(data, "hello", Tag::TagByteArray(vec![69, -6, 123]));
+    }
+
+    #[test]
+    fn test_tag_string() {
+        let data: Vec<u8> = vec!(8, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 3, 'c' as u8, 'a' as u8, 't' as u8);
+        test_tag(data, "hello", Tag::TagString("cat".to_string()));
+    }
+
+    #[test]
+    fn test_tag_list() {
+        let data: Vec<u8> = vec!(9, 0, 2, 'h' as u8, 'i' as u8, 1, 0, 0, 0, 3, 1, 2, 3);
+        test_tag(data, "hi", Tag::TagList(vec![Tag::TagByte(1), Tag::TagByte(2), Tag::TagByte(3)]));
+    }
 }
