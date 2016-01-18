@@ -17,6 +17,7 @@ pub enum Tag {
     TagString(String),
     TagList(Vec<Tag>),
     TagCompound(HashMap<String, Tag>),
+    TagIntArray(Vec<u32>),
 }
 
 // trait to simplify grabbing nested NBT data
@@ -35,6 +36,7 @@ pub trait Taglike<'t> : Sized {
     fn as_string(self) -> Result<&'t String, Error> { self.map_tag(|t| t.as_string()) }
     fn as_list(self) -> Result<&'t Vec<Tag>, Error> { self.map_tag(|t| t.as_list()) }
     fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> { self.map_tag(|t| t.as_map()) }
+    fn as_ints(self) -> Result<&'t Vec<u32>, Error> { self.map_tag(|t| t.as_ints()) }
 
     // and now everything below this is defined in terms of the above
     fn index(self, index: usize) -> Result<&'t Tag, Error> {
@@ -103,6 +105,13 @@ impl<'t> Taglike<'t> for &'t Tag {
             Err(Error::UnexpectedType)
         }
     }
+    fn as_ints(self) -> Result<&'t Vec<u32>, Error> {
+        if let &Tag::TagIntArray(ref v) = self {
+            Ok(v)
+        } else {
+            Err(Error::UnexpectedType)
+        }
+    }
 }
 
 // Results containing Taglike things are Taglike
@@ -164,6 +173,15 @@ impl Tag {
                 }
                 Tag::TagCompound(v)
             }
+            11 => { // TAG_IntArray
+                let len = try!(r.read_u32::<BigEndian>());
+                let mut v = Vec::with_capacity(len as usize);
+                for _ in 0..len {
+                    let i = try!(r.read_u32::<BigEndian>());
+                    v.push(i)
+                }
+                Tag::TagIntArray(v)
+            }
             x => return Err(Error::UnexpectedTag(x))
         })
     }
@@ -188,6 +206,7 @@ impl Tag {
             &Tag::TagString(_) => "TAG_String",
             &Tag::TagList(_) => "TAG_List",
             &Tag::TagCompound(_) => "TAG_Compound",
+            &Tag::TagIntArray(_) => "TAG_IntArray",
         }
     }
 
@@ -220,6 +239,7 @@ impl Tag {
             &Tag::TagShort(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
             &Tag::TagByte(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
             &Tag::TagEnd => { println!("{1:0$}{2}{3}", indent, "", self.get_name(), name_s); }
+            &Tag::TagIntArray(ref data) => { println!("{1:0$}{2}{3} : Length of {4}", indent, "", self.get_name(), name_s, data.len()); }
         }
     }
 }
