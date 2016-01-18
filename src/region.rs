@@ -114,6 +114,7 @@ fn test_region() {
     // The values used in the assertions in this test were gotten from the nbt.py impl in
     // Minecraft-Overviewer
     use std::fs::File;
+    use ::nbt::Taglike;
     
     let f = File::open("tests/data/r.0.0.mca").unwrap();
     let mut region = Region::new(f).unwrap();
@@ -134,5 +135,12 @@ fn test_region() {
     assert_eq!(region.get_chunk_offset(0, 0), 180224);
 
     let tag = region.load_chunk(0, 0).unwrap();
-    tag.pretty_print(0, None);
+    //tag.pretty_print(0, None);
+
+    let level = tag.key("Level").unwrap();
+    let last_update = level.key("LastUpdate").as_i64().unwrap();
+    let zPos = level.key("zPos").as_i32().unwrap();
+    assert_eq!(last_update, 137577);
+    assert_eq!(zPos, 0);
+    level.pretty_print(0, None);
 }
