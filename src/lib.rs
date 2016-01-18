@@ -7,3 +7,5 @@ extern crate byteorder;
 pub use nbt::Tag;
 
 pub mod nbt;
+
+pub mod region;
