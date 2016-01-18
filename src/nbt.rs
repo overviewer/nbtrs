@@ -143,9 +143,7 @@ impl Tag {
             7 => { // TAG_Byte_Array 
                 let len = try!(r.read_u32::<BigEndian>());
                 let mut buf = vec![0; len as usize];
-                if try!(r.read(&mut buf)) != buf.len() {
-                    return Err(Error::UnexpectedEOF);
-                }
+                try!(r.read_exact(&mut buf));
                 Tag::TagByteArray(buf)
             }
             8 => { // TAG_String
@@ -191,9 +189,7 @@ impl Tag {
     fn read_string<R>(r: &mut R) -> Result<String, Error> where R: Read {
         let len = try!(r.read_u16::<BigEndian>());
         let mut buf = vec![0; len as usize];
-        if try!(r.read(&mut buf)) != buf.len() {
-            return Err(Error::UnexpectedEOF);
-        }
+        try!(r.read_exact(&mut buf));
         Ok(try!(String::from_utf8(buf)))
     }
 
