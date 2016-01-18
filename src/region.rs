@@ -90,7 +90,9 @@ where R: Read + Seek {
         let compressed_data = {
             let mut v: Vec<u8> = Vec::with_capacity(total_len- 1);
             v.resize(total_len-1, 0);
-            try!(self.cursor.read_exact(&mut v));
+            if try!(self.cursor.read(&mut v)) != v.len() {
+                return Err(nbt_error::Error::UnexpectedEOF);
+            }
             v
         };
 
