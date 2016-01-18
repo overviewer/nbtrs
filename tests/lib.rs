@@ -11,7 +11,7 @@ use flate2::read::{GzDecoder};
 #[test]
 fn load_level_dat_flate_test() {
 
-    let level_dat_path = Path::new("level.dat");
+    let level_dat_path = Path::new("tests/data/level.dat");
     let level_dat = fs::File::open(&level_dat_path).unwrap();
 
     let decoder: GzDecoder<fs::File> = GzDecoder::new(level_dat).unwrap();

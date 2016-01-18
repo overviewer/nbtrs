@@ -262,7 +262,7 @@ mod test {
         use flate2::read::{GzDecoder};
         use std::fs;
 
-        let level_dat = fs::File::open("level.dat").unwrap();
+        let level_dat = fs::File::open("tests/data/level.dat").unwrap();
 
         let mut decoder = GzDecoder::new(level_dat).unwrap();
         let (_, tag) = Tag::parse_file(&mut decoder).unwrap();
