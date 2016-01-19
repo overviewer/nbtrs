@@ -13,4 +13,4 @@ mod region;
 
 pub use error::Error;
 pub use nbt::{Tag, Taglike};
-pub use region::{RegionFile};
+pub use region::RegionFile;

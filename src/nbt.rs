@@ -27,28 +27,46 @@ pub trait Taglike<'t> : Sized {
 
     // the rest of these are defaults that work, relying on
     // the implementation for Tag
-    fn as_i8(self) -> Result<i8, Error> { self.map_tag(|t| t.as_i8()) }
-    fn as_i16(self) -> Result<i16, Error> { self.map_tag(|t| t.as_i16()) }
-    fn as_i32(self) -> Result<i32, Error> { self.map_tag(|t| t.as_i32()) }
-    fn as_i64(self) -> Result<i64, Error> { self.map_tag(|t| t.as_i64()) }
-    fn as_f32(self) -> Result<f32, Error> { self.map_tag(|t| t.as_f32()) }
-    fn as_f64(self) -> Result<f64, Error> { self.map_tag(|t| t.as_f64()) }
-    fn as_bytes(self) -> Result<&'t Vec<u8>, Error> { self.map_tag(|t| t.as_bytes()) }
-    fn as_string(self) -> Result<&'t String, Error> { self.map_tag(|t| t.as_string()) }
-    fn as_list(self) -> Result<&'t Vec<Tag>, Error> { self.map_tag(|t| t.as_list()) }
-    fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> { self.map_tag(|t| t.as_map()) }
-    fn as_ints(self) -> Result<&'t Vec<u32>, Error> { self.map_tag(|t| t.as_ints()) }
+    fn as_i8(self) -> Result<i8, Error> {
+        self.map_tag(|t| t.as_i8())
+    }
+    fn as_i16(self) -> Result<i16, Error> {
+        self.map_tag(|t| t.as_i16())
+    }
+    fn as_i32(self) -> Result<i32, Error> {
+        self.map_tag(|t| t.as_i32())
+    }
+    fn as_i64(self) -> Result<i64, Error> {
+        self.map_tag(|t| t.as_i64())
+    }
+    fn as_f32(self) -> Result<f32, Error> {
+        self.map_tag(|t| t.as_f32())
+    }
+    fn as_f64(self) -> Result<f64, Error> {
+        self.map_tag(|t| t.as_f64())
+    }
+    fn as_bytes(self) -> Result<&'t Vec<u8>, Error> {
+        self.map_tag(|t| t.as_bytes())
+    }
+    fn as_string(self) -> Result<&'t String, Error> {
+        self.map_tag(|t| t.as_string())
+    }
+    fn as_list(self) -> Result<&'t Vec<Tag>, Error> {
+        self.map_tag(|t| t.as_list())
+    }
+    fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> {
+        self.map_tag(|t| t.as_map())
+    }
+    fn as_ints(self) -> Result<&'t Vec<u32>, Error> {
+        self.map_tag(|t| t.as_ints())
+    }
 
     // and now everything below this is defined in terms of the above
     fn index(self, index: usize) -> Result<&'t Tag, Error> {
-        self.as_list().and_then(|v| {
-            v.get(index).ok_or_else(|| Error::InvalidIndex(index))
-        })
+        self.as_list().and_then(|v| v.get(index).ok_or_else(|| Error::InvalidIndex(index)))
     }
     fn key(self, key: &str) -> Result<&'t Tag, Error> {
-        self.as_map().and_then(|m| {
-            m.get(key).ok_or_else(|| Error::InvalidKey(key.to_string()))
-        })
+        self.as_map().and_then(|m| m.get(key).ok_or_else(|| Error::InvalidKey(key.to_string())))
     }
 }
 
@@ -67,10 +85,12 @@ macro_rules! simple_getter {
 
 // &Tags are taglike
 impl<'t> Taglike<'t> for &'t Tag {
-    fn map_tag<F, T>(self, f: F) -> Result<T, Error> where F: FnOnce(&'t Tag) -> Result<T, Error> {
+    fn map_tag<F, T>(self, f: F) -> Result<T, Error>
+        where F: FnOnce(&'t Tag) -> Result<T, Error>
+    {
         f(self)
     }
-    
+
     simple_getter!(as_i8, i8, Tag::TagByte);
     simple_getter!(as_i16, i16, Tag::TagShort);
     simple_getter!(as_i32, i32, Tag::TagInt);
@@ -116,8 +136,11 @@ impl<'t> Taglike<'t> for &'t Tag {
 }
 
 // Results containing Taglike things are Taglike
-impl<'t, T> Taglike<'t> for Result<T, Error> where T: Taglike<'t> {
-    fn map_tag<F, R>(self, f: F) -> Result<R, Error> where F: FnOnce(&'t Tag) -> Result<R, Error> {
+impl<'t, T> Taglike<'t> for Result<T, Error> where T: Taglike<'t>
+{
+    fn map_tag<F, R>(self, f: F) -> Result<R, Error>
+        where F: FnOnce(&'t Tag) -> Result<R, Error>
+    {
         self.and_then(|t| t.map_tag(f))
     }
 }
@@ -125,14 +148,18 @@ impl<'t, T> Taglike<'t> for Result<T, Error> where T: Taglike<'t> {
 // now, on to actually parsing the things
 impl Tag {
     /// Attempts to parse some data as a NBT
-    pub fn parse<R>(r: &mut R) -> Result<(String, Tag), Error> where R: Read {
+    pub fn parse<R>(r: &mut R) -> Result<(String, Tag), Error>
+        where R: Read
+    {
         let ty = try!(r.read_u8());
         let name = try!(Tag::read_string(r));
         let tag = try!(Tag::parse_tag(r, Some(ty)));
         Ok((name, tag))
     }
 
-    pub fn parse_tag<R>(r: &mut R, tag_type: Option<u8>) -> Result<Tag, Error> where R: Read {
+    pub fn parse_tag<R>(r: &mut R, tag_type: Option<u8>) -> Result<Tag, Error>
+        where R: Read
+    {
         let tag_type = try!(tag_type.map_or_else(|| r.read_u8(), Ok));
         Ok(match tag_type {
             0 => Tag::TagEnd,
@@ -142,17 +169,20 @@ impl Tag {
             4 => Tag::TagLong(try!(r.read_i64::<BigEndian>())),
             5 => Tag::TagFloat(try!(r.read_f32::<BigEndian>())),
             6 => Tag::TagDouble(try!(r.read_f64::<BigEndian>())),
-            7 => { // TAG_Byte_Array 
+            7 => {
+                // TAG_Byte_Array
                 let len = try!(r.read_u32::<BigEndian>());
                 let mut buf = vec![0; len as usize];
                 try!(r.read_exact(&mut buf));
                 Tag::TagByteArray(buf)
             }
-            8 => { // TAG_String
+            8 => {
+                // TAG_String
                 let s = try!(Tag::read_string(r));
                 Tag::TagString(s)
             }
-            9 => { // TAG_List
+            9 => {
+                // TAG_List
                 let ty = try!(r.read_u8());
                 let len = try!(r.read_u32::<BigEndian>());
                 let mut v = Vec::with_capacity(len as usize);
@@ -162,7 +192,8 @@ impl Tag {
                 }
                 Tag::TagList(v)
             }
-            10 => { // TAG_Compound
+            10 => {
+                // TAG_Compound
                 let mut v = HashMap::new();
                 loop {
                     let ty = try!(r.read_u8());
@@ -175,7 +206,8 @@ impl Tag {
                 }
                 Tag::TagCompound(v)
             }
-            11 => { // TAG_IntArray
+            11 => {
+                // TAG_IntArray
                 let len = try!(r.read_u32::<BigEndian>());
                 let mut v = Vec::with_capacity(len as usize);
                 for _ in 0..len {
@@ -184,11 +216,13 @@ impl Tag {
                 }
                 Tag::TagIntArray(v)
             }
-            x => return Err(Error::UnexpectedTag(x))
+            x => return Err(Error::UnexpectedTag(x)),
         })
     }
 
-    fn read_string<R>(r: &mut R) -> Result<String, Error> where R: Read {
+    fn read_string<R>(r: &mut R) -> Result<String, Error>
+        where R: Read
+    {
         let len = try!(r.read_u16::<BigEndian>());
         let mut buf = vec![0; len as usize];
         try!(r.read_exact(&mut buf));
@@ -216,7 +250,13 @@ impl Tag {
         let name_s = name.map_or("".to_string(), |s| format!("(\"{}\")", s));
 
         match self {
-            &Tag::TagCompound(ref v) => { println!("{1:0$}{2}{3} : {4} entries\n{1:0$}{{", indent,"", self.get_name(), name_s, v.len()); 
+            &Tag::TagCompound(ref v) => {
+                println!("{1:0$}{2}{3} : {4} entries\n{1:0$}{{",
+                         indent,
+                         "",
+                         self.get_name(),
+                         name_s,
+                         v.len());
                 for (name, val) in v.iter() {
                     val.pretty_print(indent + 4, Some(name));
                 }
@@ -226,22 +266,57 @@ impl Tag {
                 let end = Tag::TagEnd;
                 let ex = data.get(0).unwrap_or(&end);
                 println!("{1:0$}{2}{3} : {4} entries of type {5}\n{1:0$}{{",
-                         indent,"", self.get_name(), name_s, data.len(), ex.get_name());
+                         indent,
+                         "",
+                         self.get_name(),
+                         name_s,
+                         data.len(),
+                         ex.get_name());
                 for item in data.iter() {
                     item.pretty_print(indent + 4, None);
                 }
                 println!("{1:0$}}}", indent, "");
             }
-            &Tag::TagString(ref s) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, s) }
-            &Tag::TagByteArray(ref data) => { println!("{1:0$}{2}{3} : Length of {4}", indent, "", self.get_name(), name_s, data.len()); }
-            &Tag::TagDouble(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
-            &Tag::TagFloat(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
-            &Tag::TagLong(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
-            &Tag::TagInt(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
-            &Tag::TagShort(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
-            &Tag::TagByte(d) => { println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d); }
-            &Tag::TagEnd => { println!("{1:0$}{2}{3}", indent, "", self.get_name(), name_s); }
-            &Tag::TagIntArray(ref data) => { println!("{1:0$}{2}{3} : Length of {4}", indent, "", self.get_name(), name_s, data.len()); }
+            &Tag::TagString(ref s) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, s)
+            }
+            &Tag::TagByteArray(ref data) => {
+                println!("{1:0$}{2}{3} : Length of {4}",
+                         indent,
+                         "",
+                         self.get_name(),
+                         name_s,
+                         data.len());
+            }
+            &Tag::TagDouble(d) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
+            }
+            &Tag::TagFloat(d) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
+            }
+            &Tag::TagLong(d) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
+            }
+            &Tag::TagInt(d) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
+            }
+            &Tag::TagShort(d) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
+            }
+            &Tag::TagByte(d) => {
+                println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
+            }
+            &Tag::TagEnd => {
+                println!("{1:0$}{2}{3}", indent, "", self.get_name(), name_s);
+            }
+            &Tag::TagIntArray(ref data) => {
+                println!("{1:0$}{2}{3} : Length of {4}",
+                         indent,
+                         "",
+                         self.get_name(),
+                         name_s,
+                         data.len());
+            }
         }
     }
 }
@@ -258,10 +333,10 @@ mod test {
         assert_eq!(n, name);
         assert_eq!(t, tag);
     }
-    
+
     #[test]
     fn test_level_dat() {
-        use flate2::read::{GzDecoder};
+        use flate2::read::GzDecoder;
         use std::fs;
 
         let level_dat = fs::File::open("tests/data/level.dat").unwrap();
@@ -274,25 +349,29 @@ mod test {
 
     #[test]
     fn test_tag_byte() {
-        let data = vec!(1, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 69);
+        let data = vec![1, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 69];
         test_tag(data, "hello", Tag::TagByte(69));
     }
 
     #[test]
     fn test_tag_byte_array() {
-        let data = vec!(7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0, 3, 69, 250, 123);
+        let data = vec![7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0,
+                        3, 69, 250, 123];
         test_tag(data, "hello", Tag::TagByteArray(vec![69, 250, 123]));
     }
 
     #[test]
     fn test_tag_string() {
-        let data = vec!(8, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 3, 'c' as u8, 'a' as u8, 't' as u8);
+        let data = vec![8, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 3,
+                        'c' as u8, 'a' as u8, 't' as u8];
         test_tag(data, "hello", Tag::TagString("cat".to_string()));
     }
 
     #[test]
     fn test_tag_list() {
-        let data = vec!(9, 0, 2, 'h' as u8, 'i' as u8, 1, 0, 0, 0, 3, 1, 2, 3);
-        test_tag(data, "hi", Tag::TagList(vec![Tag::TagByte(1), Tag::TagByte(2), Tag::TagByte(3)]));
+        let data = vec![9, 0, 2, 'h' as u8, 'i' as u8, 1, 0, 0, 0, 3, 1, 2, 3];
+        test_tag(data,
+                 "hi",
+                 Tag::TagList(vec![Tag::TagByte(1), Tag::TagByte(2), Tag::TagByte(3)]));
     }
 }

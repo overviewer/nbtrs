@@ -1,18 +1,18 @@
-use std::io::{Read, Seek,Cursor, SeekFrom};
+use std::io::{Read, Seek, Cursor, SeekFrom};
 use byteorder::{BigEndian, ReadBytesExt};
 use flate2;
 
-use ::nbt;
-use ::error as nbt_error;
+use nbt;
+use error as nbt_error;
 
 /// A region file
 ///
 /// These normally have a .mca extension on disk.  They contain up to 1024 chunks, each containing
 /// a 32-by-32 column of blocks.
 pub struct RegionFile<T>
-where T: Read + Seek {
-    /// Offsets (in bytes, from the beginning of the file) of each chunk.  
-    ///
+    where T: Read + Seek
+{
+    /// Offsets (in bytes, from the beginning of the file) of each chunk.
     /// An offset of zero means the chunk does not exist
     offsets: Vec<u32>,
 
@@ -22,18 +22,18 @@ where T: Read + Seek {
     /// Size of each chunk, in number of 4096-byte sectors
     chunk_size: Vec<u8>,
 
-    cursor: Box<T>
+    cursor: Box<T>,
 }
 
 
 
-impl<R> RegionFile<R>
-where R: Read + Seek {
+impl<R> RegionFile<R> where R: Read + Seek
+{
     /// Parses a region file
     pub fn new(mut r: R) -> Result<RegionFile<R>, nbt_error::Error> {
 
 
-        let mut offsets  = Vec::with_capacity(1024);
+        let mut offsets = Vec::with_capacity(1024);
         let mut timestamps = Vec::with_capacity(1024);
         let mut chunk_size = Vec::with_capacity(1024);
 
@@ -41,7 +41,7 @@ where R: Read + Seek {
             let v = try!(r.read_u32::<BigEndian>());
 
             // upper 3 bytes are an offset
-            let offset = v  >> 8;
+            let offset = v >> 8;
             let sector_count = (v & 0xff) as u8;
 
             offsets.push(offset * 4096);
@@ -54,11 +54,11 @@ where R: Read + Seek {
             timestamps.push(ts);
         }
 
-        Ok(RegionFile{
+        Ok(RegionFile {
             offsets: offsets,
             timestamps: timestamps,
             chunk_size: chunk_size,
-            cursor: Box::new(r)
+            cursor: Box::new(r),
         })
     }
 
@@ -71,7 +71,7 @@ where R: Read + Seek {
     pub fn get_chunk_timestamp(&self, x: u8, z: u8) -> Option<u32> {
         assert!(x < 32);
         assert!(z < 32);
-        let idx = (x as usize %32 + (z as usize %32) *32 );
+        let idx = (x as usize % 32 + (z as usize % 32) * 32);
         if idx < self.timestamps.len() {
             Some(self.timestamps[idx])
         } else {
@@ -87,7 +87,7 @@ where R: Read + Seek {
     fn get_chunk_offset(&self, x: u8, z: u8) -> u32 {
         assert!(x < 32);
         assert!(z < 32);
-        let idx = (x as usize %32 + (z as usize %32) * 32 );
+        let idx = (x as usize % 32 + (z as usize % 32) * 32);
         self.offsets[idx]
     }
 
@@ -99,7 +99,7 @@ where R: Read + Seek {
     pub fn chunk_exists(&self, x: u8, z: u8) -> bool {
         assert!(x < 32);
         assert!(z < 32);
-        let idx = (x as usize %32 + (z as usize %32) *32 );
+        let idx = (x as usize % 32 + (z as usize % 32) * 32);
         self.offsets.get(idx).map_or(false, |v| *v > 0)
     }
 
@@ -114,13 +114,15 @@ where R: Read + Seek {
         try!(self.cursor.seek(SeekFrom::Start(offset as u64)));
         let total_len = try!(self.cursor.read_u32::<BigEndian>()) as usize;
         let compression_type = try!(self.cursor.read_u8());
-       
+
         println!("Compresion type: {:?}", compression_type);
-        if compression_type != 2 { panic!("Compression types other than zlib are not supported right now"); }
+        if compression_type != 2 {
+            panic!("Compression types other than zlib are not supported right now");
+        }
 
         let compressed_data = {
-            let mut v: Vec<u8> = Vec::with_capacity(total_len- 1);
-            v.resize(total_len-1, 0);
+            let mut v: Vec<u8> = Vec::with_capacity(total_len - 1);
+            v.resize(total_len - 1, 0);
             try!(self.cursor.read_exact(&mut v));
             v
         };
@@ -139,28 +141,28 @@ fn test_region() {
     // The values used in the assertions in this test were gotten from the nbt.py impl in
     // Minecraft-Overviewer
     use std::fs::File;
-    use ::nbt::Taglike;
-    
+    use nbt::Taglike;
+
     let f = File::open("tests/data/r.0.0.mca").unwrap();
     let mut region = RegionFile::new(f).unwrap();
 
     let ts = region.get_chunk_timestamp(0, 0).unwrap();
     assert_eq!(ts, 1383443712);
-    
+
     let ts = region.get_chunk_timestamp(13, 23).unwrap();
     assert_eq!(ts, 0);
-    
+
     let ts = region.get_chunk_timestamp(14, 10).unwrap();
     assert_eq!(ts, 1383443713);
 
 
     assert!(region.chunk_exists(14, 10));
-    assert!(! region.chunk_exists(15, 15));
+    assert!(!region.chunk_exists(15, 15));
 
     assert_eq!(region.get_chunk_offset(0, 0), 180224);
 
     let tag = region.load_chunk(0, 0).unwrap();
-    //tag.pretty_print(0, None);
+    // tag.pretty_print(0, None);
 
     let level = tag.key("Level").unwrap();
     let last_update = level.key("LastUpdate").as_i64().unwrap();

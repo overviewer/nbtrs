@@ -29,9 +29,13 @@ impl From<byteorder::Error> for Error {
 }
 
 impl From<string::FromUtf8Error> for Error {
-    fn from(err: string::FromUtf8Error) -> Error { Error::BadEncoding(err) }
+    fn from(err: string::FromUtf8Error) -> Error {
+        Error::BadEncoding(err)
+    }
 }
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error { Error::Io(err) }
+    fn from(err: io::Error) -> Error {
+        Error::Io(err)
+    }
 }
