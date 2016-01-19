@@ -4,6 +4,7 @@ use byteorder::{ReadBytesExt, BigEndian};
 
 use super::error::Error;
 
+/// An NBT Tag
 #[derive(Debug, PartialEq, Clone)]
 pub enum Tag {
     TagEnd,
@@ -123,7 +124,8 @@ impl<'t, T> Taglike<'t> for Result<T, Error> where T: Taglike<'t> {
 
 // now, on to actually parsing the things
 impl Tag {
-    pub fn parse_file<R>(r: &mut R) -> Result<(String, Tag), Error> where R: Read {
+    /// Attempts to parse some data as a NBT
+    pub fn parse<R>(r: &mut R) -> Result<(String, Tag), Error> where R: Read {
         let ty = try!(r.read_u8());
         let name = try!(Tag::read_string(r));
         let tag = try!(Tag::parse_tag(r, Some(ty)));
@@ -252,7 +254,7 @@ mod test {
         use std::io::Cursor;
 
         let mut cur = Cursor::new(data);
-        let (n, t) = Tag::parse_file(&mut cur).unwrap();
+        let (n, t) = Tag::parse(&mut cur).unwrap();
         assert_eq!(n, name);
         assert_eq!(t, tag);
     }
@@ -265,7 +267,7 @@ mod test {
         let level_dat = fs::File::open("tests/data/level.dat").unwrap();
 
         let mut decoder = GzDecoder::new(level_dat).unwrap();
-        let (_, tag) = Tag::parse_file(&mut decoder).unwrap();
+        let (_, tag) = Tag::parse(&mut decoder).unwrap();
         tag.pretty_print(0, None);
         println!("{}", tag.key("Data").key("thundering").as_i8().unwrap());
     }

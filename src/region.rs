@@ -5,8 +5,11 @@ use flate2;
 use ::nbt;
 use ::error as nbt_error;
 
-
-pub struct Region<T>
+/// A region file
+///
+/// These normally have a .mca extension on disk.  They contain up to 1024 chunks, each containing
+/// a 32-by-32 column of blocks.
+pub struct RegionFile<T>
 where T: Read + Seek {
     /// Offsets (in bytes, from the beginning of the file) of each chunk.  
     ///
@@ -24,9 +27,10 @@ where T: Read + Seek {
 
 
 
-impl<R> Region<R>
+impl<R> RegionFile<R>
 where R: Read + Seek {
-    pub fn new(mut r: R) -> Result<Region<R>, nbt_error::Error> {
+    /// Parses a region file
+    pub fn new(mut r: R) -> Result<RegionFile<R>, nbt_error::Error> {
 
 
         let mut offsets  = Vec::with_capacity(1024);
@@ -50,7 +54,7 @@ where R: Read + Seek {
             timestamps.push(ts);
         }
 
-        Ok(Region{
+        Ok(RegionFile{
             offsets: offsets,
             timestamps: timestamps,
             chunk_size: chunk_size,
@@ -58,6 +62,8 @@ where R: Read + Seek {
         })
     }
 
+    /// Returns a unix timestamp of when a given chunk was last modified.  If the chunk does not
+    /// exist in this Region, return `None`.
     pub fn get_chunk_timestamp(&self, x: u32, z: u32) -> Option<u32> {
         let idx = (x%32 + (z%32) *32 ) as usize;
         if idx < self.timestamps.len() {
@@ -67,16 +73,19 @@ where R: Read + Seek {
         }
     }
 
+    /// Returns the byte-offset for a given chunk (as measured from the start of the file).
     fn get_chunk_offset(&self, x: u32, z: u32) -> u32 {
         let idx = (x%32 + (z%32) *32 ) as usize;
         self.offsets[idx]
     }
 
+    /// Does the given chunk exist in the Region
     pub fn chunk_exists(&self, x: u32, z: u32) -> bool {
         let idx = (x%32 + (z%32) *32 ) as usize;
         self.offsets.get(idx).map_or(false, |v| *v > 0)
     }
 
+    /// Loads a chunk into a parsed NBT Tag structure.
     pub fn load_chunk(&mut self, x: u32, z: u32) -> Result<nbt::Tag, nbt_error::Error> {
         let offset = self.get_chunk_offset(x, z);
 
@@ -96,7 +105,7 @@ where R: Read + Seek {
 
         let mut decoder = flate2::read::ZlibDecoder::new(Cursor::new(compressed_data));
 
-        let (_, tag) = nbt::Tag::parse_file(&mut decoder).unwrap();
+        let (_, tag) = nbt::Tag::parse(&mut decoder).unwrap();
         Ok(tag)
 
     }
@@ -111,7 +120,7 @@ fn test_region() {
     use ::nbt::Taglike;
     
     let f = File::open("tests/data/r.0.0.mca").unwrap();
-    let mut region = Region::new(f).unwrap();
+    let mut region = RegionFile::new(f).unwrap();
 
     let ts = region.get_chunk_timestamp(0, 0).unwrap();
     assert_eq!(ts, 1383443712);
