@@ -64,8 +64,14 @@ where R: Read + Seek {
 
     /// Returns a unix timestamp of when a given chunk was last modified.  If the chunk does not
     /// exist in this Region, return `None`.
-    pub fn get_chunk_timestamp(&self, x: u32, z: u32) -> Option<u32> {
-        let idx = (x%32 + (z%32) *32 ) as usize;
+    ///
+    /// # Panics
+    ///
+    /// x and z must be between 0 and 31 (inclusive).  If not, panics.
+    pub fn get_chunk_timestamp(&self, x: u8, z: u8) -> Option<u32> {
+        assert!(x < 32);
+        assert!(z < 32);
+        let idx = (x as usize %32 + (z as usize %32) *32 );
         if idx < self.timestamps.len() {
             Some(self.timestamps[idx])
         } else {
@@ -74,20 +80,36 @@ where R: Read + Seek {
     }
 
     /// Returns the byte-offset for a given chunk (as measured from the start of the file).
-    fn get_chunk_offset(&self, x: u32, z: u32) -> u32 {
-        let idx = (x%32 + (z%32) *32 ) as usize;
+    ///
+    /// # Panics
+    ///
+    /// x and z must be between 0 and 31 (inclusive).  If not, panics.
+    fn get_chunk_offset(&self, x: u8, z: u8) -> u32 {
+        assert!(x < 32);
+        assert!(z < 32);
+        let idx = (x as usize %32 + (z as usize %32) * 32 );
         self.offsets[idx]
     }
 
     /// Does the given chunk exist in the Region
-    pub fn chunk_exists(&self, x: u32, z: u32) -> bool {
-        let idx = (x%32 + (z%32) *32 ) as usize;
+    ///
+    /// # Panics
+    ///
+    /// x and z must be between 0 and 31 (inclusive).  If not, panics.
+    pub fn chunk_exists(&self, x: u8, z: u8) -> bool {
+        assert!(x < 32);
+        assert!(z < 32);
+        let idx = (x as usize %32 + (z as usize %32) *32 );
         self.offsets.get(idx).map_or(false, |v| *v > 0)
     }
 
     /// Loads a chunk into a parsed NBT Tag structure.
-    pub fn load_chunk(&mut self, x: u32, z: u32) -> Result<nbt::Tag, nbt_error::Error> {
-        let offset = self.get_chunk_offset(x, z);
+    ///
+    /// # Panics
+    ///
+    /// x and z must be between 0 and 31 (inclusive).  If not, panics.
+    pub fn load_chunk(&mut self, x: u8, z: u8) -> Result<nbt::Tag, nbt_error::Error> {
+        let offset = self.get_chunk_offset(x, z); // might panic
 
         try!(self.cursor.seek(SeekFrom::Start(offset as u64)));
         let total_len = try!(self.cursor.read_u32::<BigEndian>()) as usize;
