@@ -73,18 +73,28 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>convert</span>::<span class='ident'>From</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>string</span>;
 <span class='kw'>use</span> <span class='ident'>byteorder</span>;
 
+<span class='doccomment'>/// Things that can go wrong during NBT or Region parsing</span>
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Debug</span>)]</span>
 <span class='kw'>pub</span> <span class='kw'>enum</span> <span class='ident'>Error</span> {
+    <span class='doccomment'>/// There was an error during IO</span>
     <span class='ident'>Io</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>),
     <span class='ident'>BadEncoding</span>(<span class='ident'>string</span>::<span class='ident'>FromUtf8Error</span>),
     <span class='ident'>UnexpectedEOF</span>,
-    <span class='ident'>UnexpectedTag</span>(<span class='ident'>u8</span>), <span class='comment'>// when finding an unknown tag type while parsing</span>
+
+    <span class='doccomment'>/// An unexpected tag was found while NBT Parsing</span>
+    <span class='ident'>UnexpectedTag</span>(<span class='ident'>u8</span>),
+
     <span class='ident'>UnexpectedType</span>, <span class='comment'>// when trying to access data of the wrong type on a tag</span>
     <span class='ident'>InvalidKey</span>(<span class='ident'>String</span>), <span class='comment'>// when trying to get a bad key</span>
     <span class='ident'>InvalidIndex</span>(<span class='ident'>usize</span>), <span class='comment'>// when trying to get a bad index</span>

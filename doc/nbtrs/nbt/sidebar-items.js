@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Tag",""]],"trait":[["Taglike",""]]});
+initSidebarItems({"enum":[["Tag","An NBT Tag"]],"trait":[["Taglike",""]]});

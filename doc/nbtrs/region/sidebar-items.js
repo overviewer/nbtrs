@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Region",""]]});
+initSidebarItems({"struct":[["RegionFile","A region file"]]});

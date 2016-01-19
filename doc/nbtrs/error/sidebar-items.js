@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]]});
+initSidebarItems({"enum":[["Error","Things that can go wrong during NBT or Region parsing"]]});

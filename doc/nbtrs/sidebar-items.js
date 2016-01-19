@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["error",""],["nbt",""],["region",""]]});
+initSidebarItems({"enum":[["Error","Things that can go wrong during NBT or Region parsing"],["Tag","An NBT Tag"]],"struct":[["RegionFile","A region file"]],"trait":[["Taglike",""]]});
