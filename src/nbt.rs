@@ -246,7 +246,7 @@ impl Tag {
         }
     }
 
-    pub fn pretty_print(&self, indent: usize, name: Option<&String>) {
+    pub fn pretty_print(&self, indent: usize, name: Option<&str>) {
         let name_s = name.map_or("".to_string(), |s| format!("(\"{}\")", s));
 
         match self {
