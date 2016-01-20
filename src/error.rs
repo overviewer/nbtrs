@@ -13,10 +13,6 @@ pub enum Error {
 
     /// An unexpected tag was found while NBT Parsing
     UnexpectedTag(u8),
-
-    UnexpectedType, // when trying to access data of the wrong type on a tag
-    InvalidKey(String), // when trying to get a bad key
-    InvalidIndex(usize), // when trying to get a bad index
 }
 
 impl From<byteorder::Error> for Error {
