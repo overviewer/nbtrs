@@ -82,7 +82,7 @@ macro_rules! simple_getter {
         }
     };
     (ref, $name:ident, $r:ty, $pat:path) => {
-        fn $name(self) -> Option<&'t $r> {
+        fn $name(self) -> Option<$r> {
             if let &$pat(ref v) = self {
                 Some(v)
             } else {
@@ -107,11 +107,11 @@ impl<'t> Taglike<'t> for &'t Tag {
     simple_getter!(clone, as_f32, f32, Tag::TagFloat);
     simple_getter!(clone, as_f64, f64, Tag::TagDouble);
 
-    simple_getter!(ref, as_bytes, Vec<u8>, Tag::TagByteArray);
-    simple_getter!(ref, as_string, String, Tag::TagString);
-    simple_getter!(ref, as_list, Vec<Tag>, Tag::TagList);
-    simple_getter!(ref, as_map, HashMap<String, Tag>, Tag::TagCompound);
-    simple_getter!(ref, as_ints, Vec<u32>, Tag::TagIntArray);
+    simple_getter!(ref, as_bytes, &'t Vec<u8>, Tag::TagByteArray);
+    simple_getter!(ref, as_string, &'t String, Tag::TagString);
+    simple_getter!(ref, as_list, &'t Vec<Tag>, Tag::TagList);
+    simple_getter!(ref, as_map, &'t HashMap<String, Tag>, Tag::TagCompound);
+    simple_getter!(ref, as_ints, &'t Vec<u32>, Tag::TagIntArray);
 }
 
 
