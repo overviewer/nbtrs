@@ -1,6 +1,8 @@
 use std::io;
 use std::convert::From;
 use std::string;
+use std::error;
+use std::fmt;
 use byteorder;
 
 /// Things that can go wrong during NBT or Region parsing
@@ -37,5 +39,26 @@ impl From<string::FromUtf8Error> for Error {
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
         Error::Io(err)
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            &Error::Io(..) => "IO Error",
+            &Error::BadEncoding(..) => "Bad Encoding",
+            &Error::UnexpectedEOF => "Unexpected EOF",
+            &Error::UnexpectedTag(..) => "Unexpected Tag",
+            &Error::UnexpectedType => "Unexpected Type",
+            &Error::InvalidKey(..) => "Invalid Key",
+            &Error::InvalidIndex(..) => "Invalid Index"
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        use std::error::Error;
+        write!(f, "NBTError: {}", self.description())
     }
 }
