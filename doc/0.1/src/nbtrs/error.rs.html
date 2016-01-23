@@ -82,10 +82,28 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>convert</span>::<span class='ident'>From</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>string</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>error</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>;
 <span class='kw'>use</span> <span class='ident'>byteorder</span>;
 
 <span class='doccomment'>/// Things that can go wrong during NBT or Region parsing</span>
@@ -98,10 +116,6 @@
 
     <span class='doccomment'>/// An unexpected tag was found while NBT Parsing</span>
     <span class='ident'>UnexpectedTag</span>(<span class='ident'>u8</span>),
-
-    <span class='ident'>UnexpectedType</span>, <span class='comment'>// when trying to access data of the wrong type on a tag</span>
-    <span class='ident'>InvalidKey</span>(<span class='ident'>String</span>), <span class='comment'>// when trying to get a bad key</span>
-    <span class='ident'>InvalidIndex</span>(<span class='ident'>usize</span>), <span class='comment'>// when trying to get a bad index</span>
 }
 
 <span class='kw'>impl</span> <span class='ident'>From</span><span class='op'>&lt;</span><span class='ident'>byteorder</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
@@ -122,6 +136,24 @@
 <span class='kw'>impl</span> <span class='ident'>From</span><span class='op'>&lt;</span><span class='ident'>io</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
     <span class='kw'>fn</span> <span class='ident'>from</span>(<span class='ident'>err</span>: <span class='ident'>io</span>::<span class='ident'>Error</span>) <span class='op'>-&gt;</span> <span class='ident'>Error</span> {
         <span class='ident'>Error</span>::<span class='ident'>Io</span>(<span class='ident'>err</span>)
+    }
+}
+
+<span class='kw'>impl</span> <span class='ident'>error</span>::<span class='ident'>Error</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>description</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
+        <span class='kw'>match</span> <span class='self'>self</span> {
+            <span class='kw-2'>&amp;</span><span class='ident'>Error</span>::<span class='ident'>Io</span>(..) <span class='op'>=&gt;</span> <span class='string'>&quot;IO Error&quot;</span>,
+            <span class='kw-2'>&amp;</span><span class='ident'>Error</span>::<span class='ident'>BadEncoding</span>(..) <span class='op'>=&gt;</span> <span class='string'>&quot;Bad Encoding&quot;</span>,
+            <span class='kw-2'>&amp;</span><span class='ident'>Error</span>::<span class='ident'>UnexpectedEOF</span> <span class='op'>=&gt;</span> <span class='string'>&quot;Unexpected EOF&quot;</span>,
+            <span class='kw-2'>&amp;</span><span class='ident'>Error</span>::<span class='ident'>UnexpectedTag</span>(..) <span class='op'>=&gt;</span> <span class='string'>&quot;Unexpected Tag&quot;</span>
+        }
+    }
+}
+
+<span class='kw'>impl</span> <span class='ident'>fmt</span>::<span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>Error</span> {
+    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>fmt</span>::<span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(), <span class='ident'>fmt</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> {
+        <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>error</span>::<span class='ident'>Error</span>;
+        <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>f</span>, <span class='string'>&quot;NBTError: {}&quot;</span>, <span class='self'>self</span>.<span class='ident'>description</span>())
     }
 }
 </pre>

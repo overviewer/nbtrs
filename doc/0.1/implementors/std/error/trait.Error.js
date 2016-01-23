@@ -1,5 +1,5 @@
 (function() {var implementors = {};
-implementors['byteorder'] = ["impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/error/trait.Error.html' title='std::error::Error'>Error</a> for <a class='enum' href='byteorder/enum.Error.html' title='byteorder::Error'>Error</a>",];
+implementors['byteorder'] = ["impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/error/trait.Error.html' title='std::error::Error'>Error</a> for <a class='enum' href='byteorder/enum.Error.html' title='byteorder::Error'>Error</a>",];implementors['nbtrs'] = ["impl <a class='trait' href='https://doc.rust-lang.org/nightly/std/error/trait.Error.html' title='std::error::Error'>Error</a> for <a class='enum' href='nbtrs/enum.Error.html' title='nbtrs::Error'>Error</a>",];
 
             if (window.register_implementors) {
                 window.register_implementors(implementors);

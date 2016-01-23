@@ -418,6 +418,16 @@
 <span id="375">375</span>
 <span id="376">376</span>
 <span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>Read</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>collections</span>::<span class='ident'>HashMap</span>;
@@ -444,61 +454,70 @@
 
 <span class='comment'>// trait to simplify grabbing nested NBT data</span>
 <span class='kw'>pub</span> <span class='kw'>trait</span> <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span> : <span class='ident'>Sized</span> {
-    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>;
+    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>;
 
     <span class='comment'>// the rest of these are defaults that work, relying on</span>
     <span class='comment'>// the implementation for Tag</span>
-    <span class='kw'>fn</span> <span class='ident'>as_i8</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>i8</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_i8</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>i8</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_i8</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_i16</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>i16</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_i16</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>i16</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_i16</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_i32</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>i32</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_i32</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>i32</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_i32</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_i64</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>i64</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_i64</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>i64</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_i64</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_f32</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>f32</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_f32</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>f32</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_f32</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_f64</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>f64</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_f64</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>f64</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_f64</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_bytes</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_bytes</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_bytes</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_string</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>String</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_string</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>String</span><span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_string</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_list</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Tag</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_list</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Tag</span><span class='op'>&gt;&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_list</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_map</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>String</span>, <span class='ident'>Tag</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_map</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>String</span>, <span class='ident'>Tag</span><span class='op'>&gt;&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_map</span>())
     }
-    <span class='kw'>fn</span> <span class='ident'>as_ints</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    <span class='kw'>fn</span> <span class='ident'>as_ints</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map_tag</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>as_ints</span>())
     }
 
     <span class='comment'>// and now everything below this is defined in terms of the above</span>
-    <span class='kw'>fn</span> <span class='ident'>index</span>(<span class='self'>self</span>, <span class='ident'>index</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='self'>self</span>.<span class='ident'>as_list</span>().<span class='ident'>and_then</span>(<span class='op'>|</span><span class='ident'>v</span><span class='op'>|</span> <span class='ident'>v</span>.<span class='ident'>get</span>(<span class='ident'>index</span>).<span class='ident'>ok_or_else</span>(<span class='op'>||</span> <span class='ident'>Error</span>::<span class='ident'>InvalidIndex</span>(<span class='ident'>index</span>)))
+    <span class='kw'>fn</span> <span class='ident'>index</span>(<span class='self'>self</span>, <span class='ident'>index</span>: <span class='ident'>usize</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span><span class='op'>&gt;</span> {
+        <span class='self'>self</span>.<span class='ident'>as_list</span>().<span class='ident'>and_then</span>(<span class='op'>|</span><span class='ident'>v</span><span class='op'>|</span> <span class='ident'>v</span>.<span class='ident'>get</span>(<span class='ident'>index</span>))
     }
-    <span class='kw'>fn</span> <span class='ident'>key</span>(<span class='self'>self</span>, <span class='ident'>key</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='self'>self</span>.<span class='ident'>as_map</span>().<span class='ident'>and_then</span>(<span class='op'>|</span><span class='ident'>m</span><span class='op'>|</span> <span class='ident'>m</span>.<span class='ident'>get</span>(<span class='ident'>key</span>).<span class='ident'>ok_or_else</span>(<span class='op'>||</span> <span class='ident'>Error</span>::<span class='ident'>InvalidKey</span>(<span class='ident'>key</span>.<span class='ident'>to_string</span>())))
+    <span class='kw'>fn</span> <span class='ident'>key</span>(<span class='self'>self</span>, <span class='ident'>key</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span><span class='op'>&gt;</span> {
+        <span class='self'>self</span>.<span class='ident'>as_map</span>().<span class='ident'>and_then</span>(<span class='op'>|</span><span class='ident'>m</span><span class='op'>|</span> <span class='ident'>m</span>.<span class='ident'>get</span>(<span class='ident'>key</span>))
     }
 }
 
 <span class='comment'>// a helper to define as_i8, etc.</span>
 <span class='macro'>macro_rules</span><span class='macro'>!</span> <span class='ident'>simple_getter</span> {
-    (<span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>name</span>:<span class='ident'>ident</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>ty</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>pat</span>:<span class='ident'>path</span>) <span class='op'>=&gt;</span> {
-        <span class='kw'>fn</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>name</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
+    (<span class='ident'>clone</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>name</span>:<span class='ident'>ident</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>ty</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>pat</span>:<span class='ident'>path</span>) <span class='op'>=&gt;</span> {
+        <span class='kw'>fn</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>name</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span><span class='op'>&gt;</span> {
             <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>pat</span>(<span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
-                <span class='prelude-val'>Ok</span>(<span class='ident'>v</span>)
+                <span class='prelude-val'>Some</span>(<span class='ident'>v</span>)
             } <span class='kw'>else</span> {
-                <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedType</span>)
+                <span class='prelude-val'>None</span>
+            }
+        }
+    };
+    (<span class='kw-2'>ref</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>name</span>:<span class='ident'>ident</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span>:<span class='ident'>ty</span>, <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>pat</span>:<span class='ident'>path</span>) <span class='op'>=&gt;</span> {
+        <span class='kw'>fn</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>name</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>r</span><span class='op'>&gt;</span> {
+            <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='macro-nonterminal'>$</span><span class='macro-nonterminal'>pat</span>(<span class='kw-2'>ref</span> <span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
+                <span class='prelude-val'>Some</span>(<span class='ident'>v</span>)
+            } <span class='kw'>else</span> {
+                <span class='prelude-val'>None</span>
             }
         }
     };
@@ -506,65 +525,51 @@
 
 <span class='comment'>// &amp;Tags are taglike</span>
 <span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span> <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span> {
-    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>
-        <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>
+    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>T</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>
+        <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span>
     {
         <span class='ident'>f</span>(<span class='self'>self</span>)
     }
 
-    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>as_i8</span>, <span class='ident'>i8</span>, <span class='ident'>Tag</span>::<span class='ident'>TagByte</span>);
-    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>as_i16</span>, <span class='ident'>i16</span>, <span class='ident'>Tag</span>::<span class='ident'>TagShort</span>);
-    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>as_i32</span>, <span class='ident'>i32</span>, <span class='ident'>Tag</span>::<span class='ident'>TagInt</span>);
-    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>as_i64</span>, <span class='ident'>i64</span>, <span class='ident'>Tag</span>::<span class='ident'>TagLong</span>);
-    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>as_f32</span>, <span class='ident'>f32</span>, <span class='ident'>Tag</span>::<span class='ident'>TagFloat</span>);
-    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>as_f64</span>, <span class='ident'>f64</span>, <span class='ident'>Tag</span>::<span class='ident'>TagDouble</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>clone</span>, <span class='ident'>as_i8</span>, <span class='ident'>i8</span>, <span class='ident'>Tag</span>::<span class='ident'>TagByte</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>clone</span>, <span class='ident'>as_i16</span>, <span class='ident'>i16</span>, <span class='ident'>Tag</span>::<span class='ident'>TagShort</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>clone</span>, <span class='ident'>as_i32</span>, <span class='ident'>i32</span>, <span class='ident'>Tag</span>::<span class='ident'>TagInt</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>clone</span>, <span class='ident'>as_i64</span>, <span class='ident'>i64</span>, <span class='ident'>Tag</span>::<span class='ident'>TagLong</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>clone</span>, <span class='ident'>as_f32</span>, <span class='ident'>f32</span>, <span class='ident'>Tag</span>::<span class='ident'>TagFloat</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='ident'>clone</span>, <span class='ident'>as_f64</span>, <span class='ident'>f64</span>, <span class='ident'>Tag</span>::<span class='ident'>TagDouble</span>);
 
-    <span class='kw'>fn</span> <span class='ident'>as_bytes</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='ident'>Tag</span>::<span class='ident'>TagByteArray</span>(<span class='kw-2'>ref</span> <span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
-            <span class='prelude-val'>Ok</span>(<span class='ident'>v</span>)
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedType</span>)
-        }
-    }
-    <span class='kw'>fn</span> <span class='ident'>as_string</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>String</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='ident'>Tag</span>::<span class='ident'>TagString</span>(<span class='kw-2'>ref</span> <span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
-            <span class='prelude-val'>Ok</span>(<span class='ident'>v</span>)
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedType</span>)
-        }
-    }
-    <span class='kw'>fn</span> <span class='ident'>as_list</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Tag</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='ident'>Tag</span>::<span class='ident'>TagList</span>(<span class='kw-2'>ref</span> <span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
-            <span class='prelude-val'>Ok</span>(<span class='ident'>v</span>)
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedType</span>)
-        }
-    }
-    <span class='kw'>fn</span> <span class='ident'>as_map</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>String</span>, <span class='ident'>Tag</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='ident'>Tag</span>::<span class='ident'>TagCompound</span>(<span class='kw-2'>ref</span> <span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
-            <span class='prelude-val'>Ok</span>(<span class='ident'>v</span>)
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedType</span>)
-        }
-    }
-    <span class='kw'>fn</span> <span class='ident'>as_ints</span>(<span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='kw-2'>&amp;</span><span class='ident'>Tag</span>::<span class='ident'>TagIntArray</span>(<span class='kw-2'>ref</span> <span class='ident'>v</span>) <span class='op'>=</span> <span class='self'>self</span> {
-            <span class='prelude-val'>Ok</span>(<span class='ident'>v</span>)
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Err</span>(<span class='ident'>Error</span>::<span class='ident'>UnexpectedType</span>)
-        }
-    }
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='kw-2'>ref</span>, <span class='ident'>as_bytes</span>, <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>, <span class='ident'>Tag</span>::<span class='ident'>TagByteArray</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='kw-2'>ref</span>, <span class='ident'>as_string</span>, <span class='ident'>String</span>, <span class='ident'>Tag</span>::<span class='ident'>TagString</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='kw-2'>ref</span>, <span class='ident'>as_list</span>, <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Tag</span><span class='op'>&gt;</span>, <span class='ident'>Tag</span>::<span class='ident'>TagList</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='kw-2'>ref</span>, <span class='ident'>as_map</span>, <span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>String</span>, <span class='ident'>Tag</span><span class='op'>&gt;</span>, <span class='ident'>Tag</span>::<span class='ident'>TagCompound</span>);
+    <span class='macro'>simple_getter</span><span class='macro'>!</span>(<span class='kw-2'>ref</span>, <span class='ident'>as_ints</span>, <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u32</span><span class='op'>&gt;</span>, <span class='ident'>Tag</span>::<span class='ident'>TagIntArray</span>);
 }
 
-<span class='comment'>// Results containing Taglike things are Taglike</span>
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span>, <span class='ident'>T</span><span class='op'>&gt;</span> <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>Error</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>T</span>: <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span>
+
+<span class='comment'>// Options containing Taglike things are Taglike</span>
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span>, <span class='ident'>T</span><span class='op'>&gt;</span> <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>T</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>T</span>: <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span>
 {
-    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>R</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>R</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>
-        <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>R</span>, <span class='ident'>Error</span><span class='op'>&gt;</span>
+    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>R</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>R</span><span class='op'>&gt;</span>
+        <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>R</span><span class='op'>&gt;</span>
     {
         <span class='self'>self</span>.<span class='ident'>and_then</span>(<span class='op'>|</span><span class='ident'>t</span><span class='op'>|</span> <span class='ident'>t</span>.<span class='ident'>map_tag</span>(<span class='ident'>f</span>))
     }
 }
+
+<span class='comment'>// Results containing taglike things are Taglike</span>
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span>, <span class='ident'>T</span>, <span class='ident'>E</span><span class='op'>&gt;</span> <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span> <span class='kw'>for</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>T</span>, <span class='ident'>E</span><span class='op'>&gt;</span> <span class='kw'>where</span> <span class='ident'>T</span>: <span class='ident'>Taglike</span><span class='op'>&lt;</span><span class='lifetime'>&#39;t</span><span class='op'>&gt;</span>
+{
+    <span class='kw'>fn</span> <span class='ident'>map_tag</span><span class='op'>&lt;</span><span class='ident'>F</span>, <span class='ident'>R</span><span class='op'>&gt;</span>(<span class='self'>self</span>, <span class='ident'>f</span>: <span class='ident'>F</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>R</span><span class='op'>&gt;</span>
+        <span class='kw'>where</span> <span class='ident'>F</span>: <span class='ident'>FnOnce</span>(<span class='kw-2'>&amp;</span><span class='lifetime'>&#39;t</span> <span class='ident'>Tag</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>R</span><span class='op'>&gt;</span>
+    {
+        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Ok</span>(<span class='ident'>t</span>) <span class='op'>=</span> <span class='self'>self</span> {
+            <span class='ident'>t</span>.<span class='ident'>map_tag</span>(<span class='ident'>f</span>)
+        } <span class='kw'>else</span> {
+            <span class='prelude-val'>None</span>
+        }
+    }
+}
+
 
 <span class='comment'>// now, on to actually parsing the things</span>
 <span class='kw'>impl</span> <span class='ident'>Tag</span> {
@@ -767,6 +772,21 @@
         <span class='ident'>tag</span>.<span class='ident'>pretty_print</span>(<span class='number'>0</span>, <span class='prelude-val'>None</span>);
         <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>tag</span>.<span class='ident'>key</span>(<span class='string'>&quot;Data&quot;</span>).<span class='ident'>key</span>(<span class='string'>&quot;thundering&quot;</span>).<span class='ident'>as_i8</span>().<span class='ident'>unwrap</span>());
     }
+    
+    <span class='attribute'>#[<span class='ident'>test</span>]</span>
+    <span class='kw'>fn</span> <span class='ident'>test_lifetimes</span>() {
+        <span class='kw'>use</span> <span class='ident'>flate2</span>::<span class='ident'>read</span>::<span class='ident'>GzDecoder</span>;
+        <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fs</span>;
+
+        <span class='kw'>let</span> <span class='ident'>level_dat</span> <span class='op'>=</span> <span class='ident'>fs</span>::<span class='ident'>File</span>::<span class='ident'>open</span>(<span class='string'>&quot;tests/data/level.dat&quot;</span>).<span class='ident'>unwrap</span>();
+
+        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>decoder</span> <span class='op'>=</span> <span class='ident'>GzDecoder</span>::<span class='ident'>new</span>(<span class='ident'>level_dat</span>).<span class='ident'>unwrap</span>();
+        <span class='kw'>let</span> (_, <span class='ident'>tag</span>) <span class='op'>=</span> <span class='ident'>Tag</span>::<span class='ident'>parse</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>decoder</span>).<span class='ident'>unwrap</span>();
+        <span class='kw'>let</span> <span class='ident'>player_tag</span>: <span class='kw-2'>&amp;</span><span class='ident'>Tag</span> <span class='op'>=</span>  <span class='ident'>tag</span>.<span class='ident'>key</span>(<span class='string'>&quot;Data&quot;</span>).<span class='ident'>key</span>(<span class='string'>&quot;Player&quot;</span>).<span class='ident'>unwrap</span>();
+        <span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>player_tag</span>.<span class='ident'>key</span>(<span class='string'>&quot;DeathTime&quot;</span>).<span class='ident'>as_i16</span>().<span class='ident'>unwrap</span>();
+        <span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>player_tag</span>.<span class='ident'>key</span>(<span class='string'>&quot;OnGround&quot;</span>).<span class='ident'>as_i8</span>().<span class='ident'>unwrap</span>();
+    }
+
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>fn</span> <span class='ident'>test_tag_byte</span>() {
