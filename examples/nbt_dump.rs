@@ -13,8 +13,7 @@ fn load_and_print(s: &str) {
     let mut decoder = GzDecoder::new(f).unwrap();
     let (name, tag) = Tag::parse(&mut decoder).unwrap();
 
-    let pos = tag.key("Data").key("Player").key("Pos").as_list().unwrap().clone();
-    tag.key("Data").key("Player").key("Attributes").unwrap().pretty_print(0, Some("Player"));
+    tag.pretty_print(0, None);
 }
 
 fn main() {

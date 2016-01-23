@@ -22,50 +22,50 @@ pub enum Tag {
 }
 
 // trait to simplify grabbing nested NBT data
-pub trait Taglike {
-    fn map_tag<'t, F, T>(&'t self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
+pub trait Taglike<'t> {
+    fn map_tag<F, T>(&'t self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
 
     // the rest of these are defaults that work, relying on
     // the implementation for Tag
-    fn as_i8(&self) -> Option<i8> {
+    fn as_i8(&'t self) -> Option<i8> {
         self.map_tag(|t| t.as_i8())
     }
-    fn as_i16(&self) -> Option<i16> {
+    fn as_i16(&'t self) -> Option<i16> {
         self.map_tag(|t| t.as_i16())
     }
-    fn as_i32(&self) -> Option<i32> {
+    fn as_i32(&'t self) -> Option<i32> {
         self.map_tag(|t| t.as_i32())
     }
-    fn as_i64(&self) -> Option<i64> {
+    fn as_i64(&'t self) -> Option<i64> {
         self.map_tag(|t| t.as_i64())
     }
-    fn as_f32(&self) -> Option<f32> {
+    fn as_f32(&'t self) -> Option<f32> {
         self.map_tag(|t| t.as_f32())
     }
-    fn as_f64(&self) -> Option<f64> {
+    fn as_f64(&'t self) -> Option<f64> {
         self.map_tag(|t| t.as_f64())
     }
-    fn as_bytes(&self) -> Option<&Vec<u8>> {
+    fn as_bytes(&'t self) -> Option<&'t Vec<u8>> {
         self.map_tag(|t| t.as_bytes())
     }
-    fn as_string(&self) -> Option<&String> {
+    fn as_string(&'t self) -> Option<&'t String> {
         self.map_tag(|t| t.as_string())
     }
-    fn as_list(&self) -> Option<&Vec<Tag>> {
+    fn as_list(&'t self) -> Option<&'t Vec<Tag>> {
         self.map_tag(|t| t.as_list())
     }
-    fn as_map(&self) -> Option<&HashMap<String, Tag>> {
+    fn as_map(&'t self) -> Option<&'t HashMap<String, Tag>> {
         self.map_tag(|t| t.as_map())
     }
-    fn as_ints(&self) -> Option<&Vec<u32>> {
+    fn as_ints(&'t self) -> Option<&'t Vec<u32>> {
         self.map_tag(|t| t.as_ints())
     }
 
     // and now everything below this is defined in terms of the above
-    fn index(&self, index: usize) -> Option<&Tag> {
+    fn index(&'t self, index: usize) -> Option<&'t Tag> {
         self.as_list().and_then(|v| v.get(index))
     }
-    fn key(&self, key: &str) -> Option<&Tag> {
+    fn key(&'t self, key: &str) -> Option<&'t Tag> {
         self.as_map().and_then(|m| m.get(key))
     }
 }
@@ -93,8 +93,8 @@ macro_rules! simple_getter {
 }
 
 // &Tags are taglike
-impl Taglike for Tag {
-    fn map_tag<'t, F, T>(&'t self, f: F) -> Option<T>
+impl<'t> Taglike<'t> for Tag {
+    fn map_tag<F, T>(&'t self, f: F) -> Option<T>
         where F: FnOnce(&'t Tag) -> Option<T>
     {
         f(self)
@@ -115,9 +115,9 @@ impl Taglike for Tag {
 }
 
 // Name / Taglike pairs are Taglike
-impl<T> Taglike for (String, T) where T: Taglike
+impl<'t, T> Taglike<'t> for (String, T) where T: Taglike<'t>
 {
-    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+    fn map_tag<F, R>(&'t self, f: F) -> Option<R>
         where F: FnOnce(&'t Tag) -> Option<R>
     {
         let &(_, ref t) = self;
@@ -126,9 +126,9 @@ impl<T> Taglike for (String, T) where T: Taglike
 }
 
 // Options containing Taglike things are Taglike
-impl<T> Taglike for Option<T> where T: Taglike
+impl<'t, T> Taglike<'t> for Option<T> where T: Taglike<'t>
 {
-    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+    fn map_tag<F, R>(&'t self, f: F) -> Option<R>
         where F: FnOnce(&'t Tag) -> Option<R>
     {
         if let &Some(ref t) = self {
@@ -140,9 +140,9 @@ impl<T> Taglike for Option<T> where T: Taglike
 }
 
 // Results containing taglike things are Taglike
-impl<T, E> Taglike for Result<T, E> where T: Taglike
+impl<'t, T, E> Taglike<'t> for Result<T, E> where T: Taglike<'t>
 {
-    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+    fn map_tag<F, R>(&'t self, f: F) -> Option<R>
         where F: FnOnce(&'t Tag) -> Option<R>
     {
         if let &Ok(ref t) = self {
@@ -154,12 +154,12 @@ impl<T, E> Taglike for Result<T, E> where T: Taglike
 }
 
 // References to Taglike things are Taglike
-impl<'l, T> Taglike for &'l T where T: Taglike
+impl<'l, 't, T> Taglike<'t> for &'l T where T: Taglike<'t>
 {
-    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+    fn map_tag<F, R>(&'t self, f: F) -> Option<R>
         where F: FnOnce(&'t Tag) -> Option<R>
     {
-        T::map_tag::<'t, F, R>(self, f)
+        T::map_tag::<F, R>(self, f)
     }
 }
 
@@ -363,6 +363,20 @@ mod test {
         let (_, tag) = Tag::parse(&mut decoder).unwrap();
         tag.pretty_print(0, None);
         println!("{}", tag.key("Data").key("thundering").as_i8().unwrap());
+    }
+    
+    #[test]
+    fn test_lifetimes() {
+        use flate2::read::GzDecoder;
+        use std::fs;
+
+        let level_dat = fs::File::open("tests/data/level.dat").unwrap();
+
+        let mut decoder = GzDecoder::new(level_dat).unwrap();
+        let (_, tag) = Tag::parse(&mut decoder).unwrap();
+        let player_tag: &Tag =  tag.key("Data").key("Player").unwrap();
+        let _ = player_tag.key("DeathTime").as_i16().unwrap();
+        let _ = player_tag.key("OnGround").as_bytes().unwrap();
     }
 
     #[test]
