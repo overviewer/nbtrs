@@ -339,7 +339,16 @@ mod test {
         let mut decoder = GzDecoder::new(level_dat).unwrap();
         let (_, tag) = Tag::parse(&mut decoder).unwrap();
         tag.pretty_print(0, None);
-        println!("{}", tag.key("Data").key("thundering").as_i8().unwrap());
+        let data = tag.key("Data").unwrap();
+        assert_eq!(data.key("thundering").as_i8().unwrap(), 0);
+        let game_rules = data.key("GameRules").as_map().unwrap();
+        assert_eq!(game_rules.len(), 15);
+        assert_eq!(data.key("LastPlayed").as_i64().unwrap(), 1424141505856);
+        let motion = data.key("Player").key("Motion");
+        // i don't know the exact values for these fields, so compare with a tolerance
+        assert!((motion.index(0).as_f64().unwrap() - -0.035653).abs() < 0.00001f64);
+        assert!((motion.index(1).as_f64().unwrap() - -1.062104).abs() < 0.00001f64);
+        assert!((motion.index(2).as_f64().unwrap() - 0.0000000).abs() < 0.00001f64);
     }
 
     #[test]
@@ -352,8 +361,8 @@ mod test {
         let mut decoder = GzDecoder::new(level_dat).unwrap();
         let (_, tag) = Tag::parse(&mut decoder).unwrap();
         let player_tag: &Tag = tag.key("Data").key("Player").unwrap();
-        let _ = player_tag.key("DeathTime").as_i16().unwrap();
-        let _ = player_tag.key("OnGround").as_i8().unwrap();
+        assert_eq!(player_tag.key("DeathTime").as_i16().unwrap(), 20);
+        assert_eq!(player_tag.key("OnGround").as_i8().unwrap(), 0);
     }
 
 
