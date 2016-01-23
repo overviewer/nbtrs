@@ -22,126 +22,144 @@ pub enum Tag {
 }
 
 // trait to simplify grabbing nested NBT data
-pub trait Taglike<'t> : Sized {
-    fn map_tag<F, T>(self, f: F) -> Result<T, Error> where F: FnOnce(&'t Tag) -> Result<T, Error>;
+pub trait Taglike {
+    fn map_tag<'t, F, T>(&'t self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
 
     // the rest of these are defaults that work, relying on
     // the implementation for Tag
-    fn as_i8(self) -> Result<i8, Error> {
+    fn as_i8(&self) -> Option<i8> {
         self.map_tag(|t| t.as_i8())
     }
-    fn as_i16(self) -> Result<i16, Error> {
+    fn as_i16(&self) -> Option<i16> {
         self.map_tag(|t| t.as_i16())
     }
-    fn as_i32(self) -> Result<i32, Error> {
+    fn as_i32(&self) -> Option<i32> {
         self.map_tag(|t| t.as_i32())
     }
-    fn as_i64(self) -> Result<i64, Error> {
+    fn as_i64(&self) -> Option<i64> {
         self.map_tag(|t| t.as_i64())
     }
-    fn as_f32(self) -> Result<f32, Error> {
+    fn as_f32(&self) -> Option<f32> {
         self.map_tag(|t| t.as_f32())
     }
-    fn as_f64(self) -> Result<f64, Error> {
+    fn as_f64(&self) -> Option<f64> {
         self.map_tag(|t| t.as_f64())
     }
-    fn as_bytes(self) -> Result<&'t Vec<u8>, Error> {
+    fn as_bytes(&self) -> Option<&Vec<u8>> {
         self.map_tag(|t| t.as_bytes())
     }
-    fn as_string(self) -> Result<&'t String, Error> {
+    fn as_string(&self) -> Option<&String> {
         self.map_tag(|t| t.as_string())
     }
-    fn as_list(self) -> Result<&'t Vec<Tag>, Error> {
+    fn as_list(&self) -> Option<&Vec<Tag>> {
         self.map_tag(|t| t.as_list())
     }
-    fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> {
+    fn as_map(&self) -> Option<&HashMap<String, Tag>> {
         self.map_tag(|t| t.as_map())
     }
-    fn as_ints(self) -> Result<&'t Vec<u32>, Error> {
+    fn as_ints(&self) -> Option<&Vec<u32>> {
         self.map_tag(|t| t.as_ints())
     }
 
     // and now everything below this is defined in terms of the above
-    fn index(self, index: usize) -> Result<&'t Tag, Error> {
-        self.as_list().and_then(|v| v.get(index).ok_or_else(|| Error::InvalidIndex(index)))
+    fn index(&self, index: usize) -> Option<&Tag> {
+        self.as_list().and_then(|v| v.get(index))
     }
-    fn key(self, key: &str) -> Result<&'t Tag, Error> {
-        self.as_map().and_then(|m| m.get(key).ok_or_else(|| Error::InvalidKey(key.to_string())))
+    fn key(&self, key: &str) -> Option<&Tag> {
+        self.as_map().and_then(|m| m.get(key))
     }
 }
 
 // a helper to define as_i8, etc.
 macro_rules! simple_getter {
-    ($name:ident, $r:ty, $pat:path) => {
-        fn $name(self) -> Result<$r, Error> {
+    (clone, $name:ident, $r:ty, $pat:path) => {
+        fn $name(&self) -> Option<$r> {
             if let &$pat(v) = self {
-                Ok(v)
+                Some(v)
             } else {
-                Err(Error::UnexpectedType)
+                None
+            }
+        }
+    };
+    (ref, $name:ident, $r:ty, $pat:path) => {
+        fn $name(&self) -> Option<&$r> {
+            if let &$pat(ref v) = self {
+                Some(v)
+            } else {
+                None
             }
         }
     };
 }
 
 // &Tags are taglike
-impl<'t> Taglike<'t> for &'t Tag {
-    fn map_tag<F, T>(self, f: F) -> Result<T, Error>
-        where F: FnOnce(&'t Tag) -> Result<T, Error>
+impl Taglike for Tag {
+    fn map_tag<'t, F, T>(&'t self, f: F) -> Option<T>
+        where F: FnOnce(&'t Tag) -> Option<T>
     {
         f(self)
     }
 
-    simple_getter!(as_i8, i8, Tag::TagByte);
-    simple_getter!(as_i16, i16, Tag::TagShort);
-    simple_getter!(as_i32, i32, Tag::TagInt);
-    simple_getter!(as_i64, i64, Tag::TagLong);
-    simple_getter!(as_f32, f32, Tag::TagFloat);
-    simple_getter!(as_f64, f64, Tag::TagDouble);
+    simple_getter!(clone, as_i8, i8, Tag::TagByte);
+    simple_getter!(clone, as_i16, i16, Tag::TagShort);
+    simple_getter!(clone, as_i32, i32, Tag::TagInt);
+    simple_getter!(clone, as_i64, i64, Tag::TagLong);
+    simple_getter!(clone, as_f32, f32, Tag::TagFloat);
+    simple_getter!(clone, as_f64, f64, Tag::TagDouble);
 
-    fn as_bytes(self) -> Result<&'t Vec<u8>, Error> {
-        if let &Tag::TagByteArray(ref v) = self {
-            Ok(v)
-        } else {
-            Err(Error::UnexpectedType)
-        }
+    simple_getter!(ref, as_bytes, Vec<u8>, Tag::TagByteArray);
+    simple_getter!(ref, as_string, String, Tag::TagString);
+    simple_getter!(ref, as_list, Vec<Tag>, Tag::TagList);
+    simple_getter!(ref, as_map, HashMap<String, Tag>, Tag::TagCompound);
+    simple_getter!(ref, as_ints, Vec<u32>, Tag::TagIntArray);
+}
+
+// Name / Taglike pairs are Taglike
+impl<T> Taglike for (String, T) where T: Taglike
+{
+    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+        where F: FnOnce(&'t Tag) -> Option<R>
+    {
+        let &(_, ref t) = self;
+        t.map_tag(f)
     }
-    fn as_string(self) -> Result<&'t String, Error> {
-        if let &Tag::TagString(ref v) = self {
-            Ok(v)
+}
+
+// Options containing Taglike things are Taglike
+impl<T> Taglike for Option<T> where T: Taglike
+{
+    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+        where F: FnOnce(&'t Tag) -> Option<R>
+    {
+        if let &Some(ref t) = self {
+            t.map_tag(f)
         } else {
-            Err(Error::UnexpectedType)
-        }
-    }
-    fn as_list(self) -> Result<&'t Vec<Tag>, Error> {
-        if let &Tag::TagList(ref v) = self {
-            Ok(v)
-        } else {
-            Err(Error::UnexpectedType)
-        }
-    }
-    fn as_map(self) -> Result<&'t HashMap<String, Tag>, Error> {
-        if let &Tag::TagCompound(ref v) = self {
-            Ok(v)
-        } else {
-            Err(Error::UnexpectedType)
-        }
-    }
-    fn as_ints(self) -> Result<&'t Vec<u32>, Error> {
-        if let &Tag::TagIntArray(ref v) = self {
-            Ok(v)
-        } else {
-            Err(Error::UnexpectedType)
+            None
         }
     }
 }
 
-// Results containing Taglike things are Taglike
-impl<'t, T> Taglike<'t> for Result<T, Error> where T: Taglike<'t>
+// Results containing taglike things are Taglike
+impl<T, E> Taglike for Result<T, E> where T: Taglike
 {
-    fn map_tag<F, R>(self, f: F) -> Result<R, Error>
-        where F: FnOnce(&'t Tag) -> Result<R, Error>
+    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+        where F: FnOnce(&'t Tag) -> Option<R>
     {
-        self.and_then(|t| t.map_tag(f))
+        if let &Ok(ref t) = self {
+            t.map_tag(f)
+        } else {
+            None
+        }
+    }
+}
+
+// References to Taglike things are Taglike
+impl<'l, T> Taglike for &'l T where T: Taglike
+{
+    fn map_tag<'t, F, R>(&'t self, f: F) -> Option<R>
+        where F: FnOnce(&'t Tag) -> Option<R>
+    {
+        T::map_tag::<'t, F, R>(self, f)
     }
 }
 
