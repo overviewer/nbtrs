@@ -1,7 +1,7 @@
 extern crate nbtrs;
 extern crate flate2;
 
-use nbtrs::{Tag, Taglike};
+use nbtrs::Tag;
 
 use std::env::args;
 use std::fs::File;
@@ -13,7 +13,7 @@ fn load_and_print(s: &str) {
     let mut decoder = GzDecoder::new(f).unwrap();
     let (name, tag) = Tag::parse(&mut decoder).unwrap();
 
-    tag.pretty_print(0, None);
+    tag.pretty_print(0, Some(&name));
 }
 
 fn main() {

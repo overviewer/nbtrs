@@ -9,6 +9,7 @@ use error as nbt_error;
 ///
 /// These normally have a .mca extension on disk.  They contain up to 1024 chunks, each containing
 /// a 32-by-32 column of blocks.
+#[allow(dead_code)]
 pub struct RegionFile<T>
     where T: Read + Seek
 {
@@ -71,7 +72,7 @@ impl<R> RegionFile<R> where R: Read + Seek
     pub fn get_chunk_timestamp(&self, x: u8, z: u8) -> Option<u32> {
         assert!(x < 32);
         assert!(z < 32);
-        let idx = (x as usize % 32 + (z as usize % 32) * 32);
+        let idx = x as usize % 32 + (z as usize % 32) * 32;
         if idx < self.timestamps.len() {
             Some(self.timestamps[idx])
         } else {
@@ -87,7 +88,7 @@ impl<R> RegionFile<R> where R: Read + Seek
     fn get_chunk_offset(&self, x: u8, z: u8) -> u32 {
         assert!(x < 32);
         assert!(z < 32);
-        let idx = (x as usize % 32 + (z as usize % 32) * 32);
+        let idx = x as usize % 32 + (z as usize % 32) * 32;
         self.offsets[idx]
     }
 
@@ -99,7 +100,7 @@ impl<R> RegionFile<R> where R: Read + Seek
     pub fn chunk_exists(&self, x: u8, z: u8) -> bool {
         assert!(x < 32);
         assert!(z < 32);
-        let idx = (x as usize % 32 + (z as usize % 32) * 32);
+        let idx = x as usize % 32 + (z as usize % 32) * 32;
         self.offsets.get(idx).map_or(false, |v| *v > 0)
     }
 

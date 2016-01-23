@@ -44,7 +44,7 @@ impl error::Error for Error {
             &Error::Io(..) => "IO Error",
             &Error::BadEncoding(..) => "Bad Encoding",
             &Error::UnexpectedEOF => "Unexpected EOF",
-            &Error::UnexpectedTag(..) => "Unexpected Tag"
+            &Error::UnexpectedTag(..) => "Unexpected Tag",
         }
     }
 }

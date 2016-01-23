@@ -341,7 +341,7 @@ mod test {
         tag.pretty_print(0, None);
         println!("{}", tag.key("Data").key("thundering").as_i8().unwrap());
     }
-    
+
     #[test]
     fn test_lifetimes() {
         use flate2::read::GzDecoder;
@@ -351,7 +351,7 @@ mod test {
 
         let mut decoder = GzDecoder::new(level_dat).unwrap();
         let (_, tag) = Tag::parse(&mut decoder).unwrap();
-        let player_tag: &Tag =  tag.key("Data").key("Player").unwrap();
+        let player_tag: &Tag = tag.key("Data").key("Player").unwrap();
         let _ = player_tag.key("DeathTime").as_i16().unwrap();
         let _ = player_tag.key("OnGround").as_i8().unwrap();
     }
