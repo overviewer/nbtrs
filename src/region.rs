@@ -116,7 +116,6 @@ impl<R> RegionFile<R> where R: Read + Seek
         let total_len = try!(self.cursor.read_u32::<BigEndian>()) as usize;
         let compression_type = try!(self.cursor.read_u8());
 
-        println!("Compresion type: {:?}", compression_type);
         if compression_type != 2 {
             panic!("Compression types other than zlib are not supported right now");
         }
