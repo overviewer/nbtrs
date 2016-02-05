@@ -11,7 +11,6 @@ use error as nbt_error;
 /// a 32-by-32 column of blocks.
 #[allow(dead_code)]
 pub struct RegionFile<T>
-    where T: Read + Seek
 {
     /// Offsets (in bytes, from the beginning of the file) of each chunk.
     /// An offset of zero means the chunk does not exist
