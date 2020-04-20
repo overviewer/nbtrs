@@ -14,7 +14,7 @@ fn load_level_dat_flate_test() {
     let level_dat_path = Path::new("tests/data/level.dat");
     let level_dat = fs::File::open(&level_dat_path).unwrap();
 
-    let decoder: GzDecoder<fs::File> = GzDecoder::new(level_dat).unwrap();
+    let decoder: GzDecoder<fs::File> = GzDecoder::new(level_dat);
 
     // check the first 4 bytes
     let bytes: Vec<u8> = decoder.bytes().take(4).map(|x| x.unwrap()).collect();

@@ -5,8 +5,8 @@ authors = ["Andrew Chin <achin@eminence32.net>"]
 edition = "2018"
 
 [dependencies]
-flate2 = "0.2"
-byteorder = "0.4"
+flate2 = "1"
+byteorder = "1"
 
 [[example]]
 name = "nbt_dump"

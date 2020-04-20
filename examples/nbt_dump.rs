@@ -10,7 +10,7 @@ use flate2::read::GzDecoder;
 fn load_and_print(s: &str) {
     println!("Dumping... {}", s);
     let f = File::open(s).unwrap();
-    let mut decoder = GzDecoder::new(f).unwrap();
+    let mut decoder = GzDecoder::new(f);
     let (name, tag) = Tag::parse(&mut decoder).unwrap();
 
     tag.pretty_print(0, Some(&name));

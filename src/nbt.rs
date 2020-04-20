@@ -361,7 +361,7 @@ mod test {
 
         let level_dat = fs::File::open("tests/data/level.dat").unwrap();
 
-        let mut decoder = GzDecoder::new(level_dat).unwrap();
+        let mut decoder = GzDecoder::new(level_dat);
         let (_, tag) = Tag::parse(&mut decoder).unwrap();
         tag.pretty_print(0, None);
         let data = tag.key("Data").unwrap();
@@ -383,7 +383,7 @@ mod test {
 
         let level_dat = fs::File::open("tests/data/level.dat").unwrap();
 
-        let mut decoder = GzDecoder::new(level_dat).unwrap();
+        let mut decoder = GzDecoder::new(level_dat);
         let (_, tag) = Tag::parse(&mut decoder).unwrap();
         let player_tag: &Tag = tag.key("Data").key("Player").unwrap();
         assert_eq!(player_tag.key("DeathTime").as_i16().unwrap(), 20);
