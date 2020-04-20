@@ -19,6 +19,7 @@ pub enum Tag {
     TagList(Vec<Tag>),
     TagCompound(HashMap<String, Tag>),
     TagIntArray(Vec<u32>),
+    TagLongArray(Vec<u64>),
 }
 
 // trait to simplify grabbing nested NBT data
@@ -59,6 +60,9 @@ pub trait Taglike<'t> : Sized {
     }
     fn as_ints(self) -> Option<&'t Vec<u32>> {
         self.map_tag(|t| t.as_ints())
+    }
+    fn as_longs(self) -> Option<&'t Vec<u64>> {
+        self.map_tag(|t| t.as_longs())
     }
 
     // and now everything below this is defined in terms of the above
@@ -112,6 +116,7 @@ impl<'t> Taglike<'t> for &'t Tag {
     simple_getter!(ref, as_list, &'t Vec<Tag>, Tag::TagList);
     simple_getter!(ref, as_map, &'t HashMap<String, Tag>, Tag::TagCompound);
     simple_getter!(ref, as_ints, &'t Vec<u32>, Tag::TagIntArray);
+    simple_getter!(ref, as_longs, &'t Vec<u64>, Tag::TagLongArray);
 }
 
 
@@ -210,7 +215,18 @@ impl Tag {
                     v.push(i)
                 }
                 Tag::TagIntArray(v)
+            },
+            12 => {
+                // TAG_LongArray
+                let len = try!(r.read_u32::<BigEndian>());
+                let mut v = Vec::with_capacity(len as usize);
+                for _ in 0..len {
+                    let i = try!(r.read_u64::<BigEndian>());
+                    v.push(i)
+                }
+                Tag::TagLongArray(v)
             }
+
             x => return Err(Error::UnexpectedTag(x)),
         })
     }
@@ -238,6 +254,7 @@ impl Tag {
             &Tag::TagList(_) => "TAG_List",
             &Tag::TagCompound(_) => "TAG_Compound",
             &Tag::TagIntArray(_) => "TAG_IntArray",
+            &Tag::TagLongArray(_) => "TAG_LongArray"
         }
     }
 
@@ -305,6 +322,14 @@ impl Tag {
                 println!("{1:0$}{2}{3}", indent, "", self.get_name(), name_s);
             }
             &Tag::TagIntArray(ref data) => {
+                println!("{1:0$}{2}{3} : Length of {4}",
+                         indent,
+                         "",
+                         self.get_name(),
+                         name_s,
+                         data.len());
+            }
+            &Tag::TagLongArray(ref data) => {
                 println!("{1:0$}{2}{3} : Length of {4}",
                          indent,
                          "",
