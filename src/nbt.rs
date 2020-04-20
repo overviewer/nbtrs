@@ -151,43 +151,43 @@ impl Tag {
     pub fn parse<R>(r: &mut R) -> Result<(String, Tag), Error>
         where R: Read
     {
-        let ty = try!(r.read_u8());
-        let name = try!(Tag::read_string(r));
-        let tag = try!(Tag::parse_tag(r, Some(ty)));
+        let ty = r.read_u8()?;
+        let name = Tag::read_string(r)?;
+        let tag = Tag::parse_tag(r, Some(ty))?;
         Ok((name, tag))
     }
 
     pub fn parse_tag<R>(r: &mut R, tag_type: Option<u8>) -> Result<Tag, Error>
         where R: Read
     {
-        let tag_type = try!(tag_type.map_or_else(|| r.read_u8(), Ok));
+        let tag_type = tag_type.map_or_else(|| r.read_u8(), Ok)?;
         Ok(match tag_type {
             0 => Tag::TagEnd,
-            1 => Tag::TagByte(try!(r.read_i8())),
-            2 => Tag::TagShort(try!(r.read_i16::<BigEndian>())),
-            3 => Tag::TagInt(try!(r.read_i32::<BigEndian>())),
-            4 => Tag::TagLong(try!(r.read_i64::<BigEndian>())),
-            5 => Tag::TagFloat(try!(r.read_f32::<BigEndian>())),
-            6 => Tag::TagDouble(try!(r.read_f64::<BigEndian>())),
+            1 => Tag::TagByte(r.read_i8()?),
+            2 => Tag::TagShort(r.read_i16::<BigEndian>()?),
+            3 => Tag::TagInt(r.read_i32::<BigEndian>()?),
+            4 => Tag::TagLong(r.read_i64::<BigEndian>()?),
+            5 => Tag::TagFloat(r.read_f32::<BigEndian>()?),
+            6 => Tag::TagDouble(r.read_f64::<BigEndian>()?),
             7 => {
                 // TAG_Byte_Array
-                let len = try!(r.read_u32::<BigEndian>());
+                let len = r.read_u32::<BigEndian>()?;
                 let mut buf = vec![0; len as usize];
-                try!(r.read_exact(&mut buf));
+                r.read_exact(&mut buf)?;
                 Tag::TagByteArray(buf)
             }
             8 => {
                 // TAG_String
-                let s = try!(Tag::read_string(r));
+                let s = Tag::read_string(r)?;
                 Tag::TagString(s)
             }
             9 => {
                 // TAG_List
-                let ty = try!(r.read_u8());
-                let len = try!(r.read_u32::<BigEndian>());
+                let ty = r.read_u8()?;
+                let len = r.read_u32::<BigEndian>()?;
                 let mut v = Vec::with_capacity(len as usize);
                 for _ in 0..len {
-                    let t = try!(Tag::parse_tag(r, Some(ty)));
+                    let t = Tag::parse_tag(r, Some(ty))?;
                     v.push(t)
                 }
                 Tag::TagList(v)
@@ -196,32 +196,32 @@ impl Tag {
                 // TAG_Compound
                 let mut v = HashMap::new();
                 loop {
-                    let ty = try!(r.read_u8());
+                    let ty = r.read_u8()?;
                     if ty == 0 {
                         break;
                     }
-                    let name = try!(Tag::read_string(r));
-                    let value = try!(Tag::parse_tag(r, Some(ty)));
+                    let name = Tag::read_string(r)?;
+                    let value = Tag::parse_tag(r, Some(ty))?;
                     v.insert(name, value);
                 }
                 Tag::TagCompound(v)
             }
             11 => {
                 // TAG_IntArray
-                let len = try!(r.read_u32::<BigEndian>());
+                let len = r.read_u32::<BigEndian>()?;
                 let mut v = Vec::with_capacity(len as usize);
                 for _ in 0..len {
-                    let i = try!(r.read_u32::<BigEndian>());
+                    let i = r.read_u32::<BigEndian>()?;
                     v.push(i)
                 }
                 Tag::TagIntArray(v)
             },
             12 => {
                 // TAG_LongArray
-                let len = try!(r.read_u32::<BigEndian>());
+                let len = r.read_u32::<BigEndian>()?;
                 let mut v = Vec::with_capacity(len as usize);
                 for _ in 0..len {
-                    let i = try!(r.read_u64::<BigEndian>());
+                    let i = r.read_u64::<BigEndian>()?;
                     v.push(i)
                 }
                 Tag::TagLongArray(v)
@@ -234,10 +234,10 @@ impl Tag {
     fn read_string<R>(r: &mut R) -> Result<String, Error>
         where R: Read
     {
-        let len = try!(r.read_u16::<BigEndian>());
+        let len = r.read_u16::<BigEndian>()?;
         let mut buf = vec![0; len as usize];
-        try!(r.read_exact(&mut buf));
-        Ok(try!(String::from_utf8(buf)))
+        r.read_exact(&mut buf)?;
+        Ok(String::from_utf8(buf)?)
     }
 
     pub fn get_name(&self) -> &'static str {

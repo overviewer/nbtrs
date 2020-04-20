@@ -2,6 +2,7 @@
 name = "nbtrs"
 version = "0.1.1"
 authors = ["Andrew Chin <achin@eminence32.net>"]
+edition = "2018"
 
 [dependencies]
 flate2 = "0.2"

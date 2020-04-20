@@ -57,7 +57,6 @@ impl error::Error for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        use std::error::Error;
-        write!(f, "NBTError: {}", self.description())
+        write!(f, "NBTError: {}", self)
     }
 }

@@ -4,9 +4,6 @@
 //!
 //! Put some here
 
-extern crate flate2;
-extern crate byteorder;
-
 mod error;
 mod nbt;
 mod region;

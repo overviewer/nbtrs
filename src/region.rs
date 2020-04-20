@@ -2,8 +2,8 @@ use std::io::{Read, Seek, Cursor, SeekFrom};
 use byteorder::{BigEndian, ReadBytesExt};
 use flate2;
 
-use nbt;
-use error as nbt_error;
+use crate::nbt;
+use crate::error as nbt_error;
 
 /// A region file
 ///
@@ -38,7 +38,7 @@ impl<R> RegionFile<R> where R: Read + Seek
         let mut chunk_size = Vec::with_capacity(1024);
 
         for _ in 0..1024 {
-            let v = try!(r.read_u32::<BigEndian>());
+            let v = r.read_u32::<BigEndian>()?;
 
             // upper 3 bytes are an offset
             let offset = v >> 8;
@@ -50,7 +50,7 @@ impl<R> RegionFile<R> where R: Read + Seek
         }
 
         for _ in 0..1024 {
-            let ts = try!(r.read_u32::<BigEndian>());
+            let ts = r.read_u32::<BigEndian>()?;
             timestamps.push(ts);
         }
 
@@ -111,9 +111,9 @@ impl<R> RegionFile<R> where R: Read + Seek
     pub fn load_chunk(&mut self, x: u8, z: u8) -> Result<nbt::Tag, nbt_error::Error> {
         let offset = self.get_chunk_offset(x, z); // might panic
 
-        try!(self.cursor.seek(SeekFrom::Start(offset as u64)));
-        let total_len = try!(self.cursor.read_u32::<BigEndian>()) as usize;
-        let compression_type = try!(self.cursor.read_u8());
+        self.cursor.seek(SeekFrom::Start(offset as u64))?;
+        let total_len = self.cursor.read_u32::<BigEndian>()? as usize;
+        let compression_type = self.cursor.read_u8()?;
 
         if compression_type != 2 {
             return Err(nbt_error::Error::UnsupportedCompressionFormat{compression_type});
@@ -122,7 +122,7 @@ impl<R> RegionFile<R> where R: Read + Seek
         let compressed_data = {
             let mut v: Vec<u8> = Vec::with_capacity(total_len - 1);
             v.resize(total_len - 1, 0);
-            try!(self.cursor.read_exact(&mut v));
+            self.cursor.read_exact(&mut v)?;
             v
         };
 
