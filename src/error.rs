@@ -11,6 +11,11 @@ pub enum Error {
     /// There was an error during IO
     Io(io::Error),
     BadEncoding(string::FromUtf8Error),
+    /// Currently, only zlib is implemented.
+    UnsupportedCompressionFormat{
+        /// Compression type byte from the format.
+        compression_type: u8
+    },
     UnexpectedEOF,
 
     /// An unexpected tag was found while NBT Parsing
@@ -45,6 +50,7 @@ impl error::Error for Error {
             &Error::BadEncoding(..) => "Bad Encoding",
             &Error::UnexpectedEOF => "Unexpected EOF",
             &Error::UnexpectedTag(..) => "Unexpected Tag",
+            &Error::UnsupportedCompressionFormat{ compression_type: _ } => "Unsupported Compression",
         }
     }
 }
