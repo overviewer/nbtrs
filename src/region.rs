@@ -116,7 +116,7 @@ impl<R> RegionFile<R> where R: Read + Seek
         let compression_type = try!(self.cursor.read_u8());
 
         if compression_type != 2 {
-            panic!("Compression types other than zlib are not supported right now");
+            return Err(nbt_error::Error::UnsupportedCompressionFormat{compression_type});
         }
 
         let compressed_data = {
