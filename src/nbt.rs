@@ -24,44 +24,44 @@ pub enum Tag {
 
 // trait to simplify grabbing nested NBT data
 pub trait Taglike<'t> : Sized {
-    fn map_tag<F, T>(self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
+    fn map_tag<F, T>(&self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
 
     // the rest of these are defaults that work, relying on
     // the implementation for Tag
-    fn as_i8(self) -> Option<i8> {
+    fn as_i8(&self) -> Option<i8> {
         self.map_tag(|t| t.as_i8())
     }
-    fn as_i16(self) -> Option<i16> {
+    fn as_i16(&self) -> Option<i16> {
         self.map_tag(|t| t.as_i16())
     }
-    fn as_i32(self) -> Option<i32> {
+    fn as_i32(&self) -> Option<i32> {
         self.map_tag(|t| t.as_i32())
     }
-    fn as_i64(self) -> Option<i64> {
+    fn as_i64(&self) -> Option<i64> {
         self.map_tag(|t| t.as_i64())
     }
-    fn as_f32(self) -> Option<f32> {
+    fn as_f32(&self) -> Option<f32> {
         self.map_tag(|t| t.as_f32())
     }
-    fn as_f64(self) -> Option<f64> {
+    fn as_f64(&self) -> Option<f64> {
         self.map_tag(|t| t.as_f64())
     }
-    fn as_bytes(self) -> Option<&'t Vec<u8>> {
+    fn as_bytes(&self) -> Option<&'t Vec<u8>> {
         self.map_tag(|t| t.as_bytes())
     }
-    fn as_string(self) -> Option<&'t String> {
+    fn as_string(&self) -> Option<&'t String> {
         self.map_tag(|t| t.as_string())
     }
-    fn as_list(self) -> Option<&'t Vec<Tag>> {
+    fn as_list(&self) -> Option<&'t Vec<Tag>> {
         self.map_tag(|t| t.as_list())
     }
-    fn as_map(self) -> Option<&'t HashMap<String, Tag>> {
+    fn as_map(&self) -> Option<&'t HashMap<String, Tag>> {
         self.map_tag(|t| t.as_map())
     }
-    fn as_ints(self) -> Option<&'t Vec<u32>> {
+    fn as_ints(&self) -> Option<&'t Vec<u32>> {
         self.map_tag(|t| t.as_ints())
     }
-    fn as_longs(self) -> Option<&'t Vec<u64>> {
+    fn as_longs(&self) -> Option<&'t Vec<u64>> {
         self.map_tag(|t| t.as_longs())
     }
 
@@ -77,16 +77,16 @@ pub trait Taglike<'t> : Sized {
 // a helper to define as_i8, etc.
 macro_rules! simple_getter {
     (clone, $name:ident, $r:ty, $pat:path) => {
-        fn $name(self) -> Option<$r> {
+        fn $name(&self) -> Option<$r> {
             if let &$pat(v) = self {
-                Some(v)
+                Some(*v)
             } else {
                 None
             }
         }
     };
     (ref, $name:ident, $r:ty, $pat:path) => {
-        fn $name(self) -> Option<$r> {
+        fn $name(&self) -> Option<$r> {
             if let &$pat(ref v) = self {
                 Some(v)
             } else {
@@ -98,7 +98,7 @@ macro_rules! simple_getter {
 
 // &Tags are taglike
 impl<'t> Taglike<'t> for &'t Tag {
-    fn map_tag<F, T>(self, f: F) -> Option<T>
+    fn map_tag<F, T>(&self, f: F) -> Option<T>
         where F: FnOnce(&'t Tag) -> Option<T>
     {
         f(self)
@@ -123,17 +123,17 @@ impl<'t> Taglike<'t> for &'t Tag {
 // Options containing Taglike things are Taglike
 impl<'t, T> Taglike<'t> for Option<T> where T: Taglike<'t>
 {
-    fn map_tag<F, R>(self, f: F) -> Option<R>
+    fn map_tag<F, R>(&self, f: F) -> Option<R>
         where F: FnOnce(&'t Tag) -> Option<R>
     {
-        self.and_then(|t| t.map_tag(f))
+        self.as_ref().and_then(|t| t.map_tag(f))
     }
 }
 
 // Results containing taglike things are Taglike
 impl<'t, T, E> Taglike<'t> for Result<T, E> where T: Taglike<'t>
 {
-    fn map_tag<F, R>(self, f: F) -> Option<R>
+    fn map_tag<F, R>(&self, f: F) -> Option<R>
         where F: FnOnce(&'t Tag) -> Option<R>
     {
         if let Ok(t) = self {
