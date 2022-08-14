@@ -22,7 +22,24 @@ pub enum Tag {
     TagLongArray(Vec<u64>),
 }
 
-// trait to simplify grabbing nested NBT data
+/// trait to simplify grabbing nested NBT data
+///
+/// # Example
+///
+/// ```
+/// # use flate2::read::GzDecoder;
+/// # use std::fs;
+/// # use nbtrs::{Tag, Taglike};
+/// # let level_dat = fs::File::open("tests/data/level.dat").unwrap();
+/// # let mut decoder = GzDecoder::new(level_dat);
+/// # let (_, tag) = Tag::parse(&mut decoder).unwrap();
+/// // Extract a deeply nested field like the Data.GameRules.keepInventory field
+/// let nested = tag.key("Data").key("GameRules").key("keepInventory").as_string();
+/// assert_eq!(nested.unwrap(), "false");
+/// // For things that do not exist, you can still use methods like 'key'
+/// let nope = tag.key("does_not_exist").index(4).as_i32();
+/// assert!(nope.is_none());
+/// ```
 pub trait Taglike<'t> : Sized {
     fn map_tag<F, T>(&self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
 
