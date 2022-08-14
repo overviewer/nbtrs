@@ -1,6 +1,6 @@
-use std::io::Read;
+use byteorder::{BigEndian, ReadBytesExt};
 use std::collections::HashMap;
-use byteorder::{ReadBytesExt, BigEndian};
+use std::io::Read;
 
 use super::error::Error;
 
@@ -40,8 +40,10 @@ pub enum Tag {
 /// let nope = tag.key("does_not_exist").index(4).as_i32();
 /// assert!(nope.is_none());
 /// ```
-pub trait Taglike<'t> : Sized {
-    fn map_tag<F, T>(&self, f: F) -> Option<T> where F: FnOnce(&'t Tag) -> Option<T>;
+pub trait Taglike<'t>: Sized {
+    fn map_tag<F, T>(&self, f: F) -> Option<T>
+    where
+        F: FnOnce(&'t Tag) -> Option<T>;
 
     // the rest of these are defaults that work, relying on
     // the implementation for Tag
@@ -116,7 +118,8 @@ macro_rules! simple_getter {
 // &Tags are taglike
 impl<'t> Taglike<'t> for &'t Tag {
     fn map_tag<F, T>(&self, f: F) -> Option<T>
-        where F: FnOnce(&'t Tag) -> Option<T>
+    where
+        F: FnOnce(&'t Tag) -> Option<T>,
     {
         f(self)
     }
@@ -136,22 +139,27 @@ impl<'t> Taglike<'t> for &'t Tag {
     simple_getter!(ref, as_longs, &'t Vec<u64>, Tag::TagLongArray);
 }
 
-
 // Options containing Taglike things are Taglike
-impl<'t, T> Taglike<'t> for Option<T> where T: Taglike<'t>
+impl<'t, T> Taglike<'t> for Option<T>
+where
+    T: Taglike<'t>,
 {
     fn map_tag<F, R>(&self, f: F) -> Option<R>
-        where F: FnOnce(&'t Tag) -> Option<R>
+    where
+        F: FnOnce(&'t Tag) -> Option<R>,
     {
         self.as_ref().and_then(|t| t.map_tag(f))
     }
 }
 
 // Results containing taglike things are Taglike
-impl<'t, T, E> Taglike<'t> for Result<T, E> where T: Taglike<'t>
+impl<'t, T, E> Taglike<'t> for Result<T, E>
+where
+    T: Taglike<'t>,
 {
     fn map_tag<F, R>(&self, f: F) -> Option<R>
-        where F: FnOnce(&'t Tag) -> Option<R>
+    where
+        F: FnOnce(&'t Tag) -> Option<R>,
     {
         if let Ok(t) = self {
             t.map_tag(f)
@@ -161,12 +169,12 @@ impl<'t, T, E> Taglike<'t> for Result<T, E> where T: Taglike<'t>
     }
 }
 
-
 // now, on to actually parsing the things
 impl Tag {
     /// Attempts to parse some data as a NBT
     pub fn parse<R>(r: &mut R) -> Result<(String, Tag), Error>
-        where R: Read
+    where
+        R: Read,
     {
         let ty = r.read_u8()?;
         let name = Tag::read_string(r)?;
@@ -175,7 +183,8 @@ impl Tag {
     }
 
     pub fn parse_tag<R>(r: &mut R, tag_type: Option<u8>) -> Result<Tag, Error>
-        where R: Read
+    where
+        R: Read,
     {
         let tag_type = tag_type.map_or_else(|| r.read_u8(), Ok)?;
         Ok(match tag_type {
@@ -232,7 +241,7 @@ impl Tag {
                     v.push(i)
                 }
                 Tag::TagIntArray(v)
-            },
+            }
             12 => {
                 // TAG_LongArray
                 let len = r.read_u32::<BigEndian>()?;
@@ -249,7 +258,8 @@ impl Tag {
     }
 
     fn read_string<R>(r: &mut R) -> Result<String, Error>
-        where R: Read
+    where
+        R: Read,
     {
         let len = r.read_u16::<BigEndian>()?;
         let mut buf = vec![0; len as usize];
@@ -271,7 +281,7 @@ impl Tag {
             Tag::TagList(_) => "TAG_List",
             Tag::TagCompound(_) => "TAG_Compound",
             Tag::TagIntArray(_) => "TAG_IntArray",
-            Tag::TagLongArray(_) => "TAG_LongArray"
+            Tag::TagLongArray(_) => "TAG_LongArray",
         }
     }
 
@@ -280,12 +290,14 @@ impl Tag {
 
         match self {
             Tag::TagCompound(ref v) => {
-                println!("{1:0$}{2}{3} : {4} entries\n{1:0$}{{",
-                         indent,
-                         "",
-                         self.get_name(),
-                         name_s,
-                         v.len());
+                println!(
+                    "{1:0$}{2}{3} : {4} entries\n{1:0$}{{",
+                    indent,
+                    "",
+                    self.get_name(),
+                    name_s,
+                    v.len()
+                );
                 for (name, val) in v.iter() {
                     val.pretty_print(indent + 4, Some(name));
                 }
@@ -294,13 +306,15 @@ impl Tag {
             Tag::TagList(ref data) => {
                 let end = Tag::TagEnd;
                 let ex = data.get(0).unwrap_or(&end);
-                println!("{1:0$}{2}{3} : {4} entries of type {5}\n{1:0$}{{",
-                         indent,
-                         "",
-                         self.get_name(),
-                         name_s,
-                         data.len(),
-                         ex.get_name());
+                println!(
+                    "{1:0$}{2}{3} : {4} entries of type {5}\n{1:0$}{{",
+                    indent,
+                    "",
+                    self.get_name(),
+                    name_s,
+                    data.len(),
+                    ex.get_name()
+                );
                 for item in data.iter() {
                     item.pretty_print(indent + 4, None);
                 }
@@ -310,12 +324,14 @@ impl Tag {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, s)
             }
             Tag::TagByteArray(ref data) => {
-                println!("{1:0$}{2}{3} : Length of {4}",
-                         indent,
-                         "",
-                         self.get_name(),
-                         name_s,
-                         data.len());
+                println!(
+                    "{1:0$}{2}{3} : Length of {4}",
+                    indent,
+                    "",
+                    self.get_name(),
+                    name_s,
+                    data.len()
+                );
             }
             Tag::TagDouble(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
@@ -339,20 +355,24 @@ impl Tag {
                 println!("{1:0$}{2}{3}", indent, "", self.get_name(), name_s);
             }
             Tag::TagIntArray(ref data) => {
-                println!("{1:0$}{2}{3} : Length of {4}",
-                         indent,
-                         "",
-                         self.get_name(),
-                         name_s,
-                         data.len());
+                println!(
+                    "{1:0$}{2}{3} : Length of {4}",
+                    indent,
+                    "",
+                    self.get_name(),
+                    name_s,
+                    data.len()
+                );
             }
             Tag::TagLongArray(ref data) => {
-                println!("{1:0$}{2}{3} : Length of {4}",
-                         indent,
-                         "",
-                         self.get_name(),
-                         name_s,
-                         data.len());
+                println!(
+                    "{1:0$}{2}{3} : Length of {4}",
+                    indent,
+                    "",
+                    self.get_name(),
+                    name_s,
+                    data.len()
+                );
             }
         }
     }
@@ -407,7 +427,6 @@ mod test {
         assert_eq!(player_tag.key("OnGround").as_i8().unwrap(), 0);
     }
 
-
     #[test]
     fn test_tag_byte() {
         let data = vec![1, 0, 5, b'h', b'e', b'l', b'l', b'o', 69];
@@ -416,23 +435,27 @@ mod test {
 
     #[test]
     fn test_tag_byte_array() {
-        let data = vec![7, 0, 5, b'h', b'e', b'l', b'l', b'o', 0, 0, 0,
-                        3, 69, 250, 123];
+        let data = vec![
+            7, 0, 5, b'h', b'e', b'l', b'l', b'o', 0, 0, 0, 3, 69, 250, 123,
+        ];
         test_tag(data, "hello", Tag::TagByteArray(vec![69, 250, 123]));
     }
 
     #[test]
     fn test_tag_string() {
-        let data = vec![8, 0, 5, b'h', b'e', b'l', b'l', b'o', 0, 3,
-                        b'c', b'a', b't'];
+        let data = vec![
+            8, 0, 5, b'h', b'e', b'l', b'l', b'o', 0, 3, b'c', b'a', b't',
+        ];
         test_tag(data, "hello", Tag::TagString("cat".to_string()));
     }
 
     #[test]
     fn test_tag_list() {
         let data = vec![9, 0, 2, b'h', b'i', 1, 0, 0, 0, 3, 1, 2, 3];
-        test_tag(data,
-                 "hi",
-                 Tag::TagList(vec![Tag::TagByte(1), Tag::TagByte(2), Tag::TagByte(3)]));
+        test_tag(
+            data,
+            "hi",
+            Tag::TagList(vec![Tag::TagByte(1), Tag::TagByte(2), Tag::TagByte(3)]),
+        );
     }
 }

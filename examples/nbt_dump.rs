@@ -1,11 +1,11 @@
-extern crate nbtrs;
 extern crate flate2;
+extern crate nbtrs;
 
 use nbtrs::Tag;
 
+use flate2::read::GzDecoder;
 use std::env::args;
 use std::fs::File;
-use flate2::read::GzDecoder;
 
 fn load_and_print(s: &str) {
     println!("Dumping... {}", s);
@@ -17,9 +17,7 @@ fn load_and_print(s: &str) {
 }
 
 fn main() {
-
     for arg in args().skip(1) {
         load_and_print(&arg);
     }
-
 }

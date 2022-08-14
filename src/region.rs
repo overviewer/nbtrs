@@ -1,16 +1,15 @@
-use std::io::{Read, Seek, Cursor, SeekFrom};
 use byteorder::{BigEndian, ReadBytesExt};
+use std::io::{Cursor, Read, Seek, SeekFrom};
 
-use crate::nbt;
 use crate::error as nbt_error;
+use crate::nbt;
 
 /// A region file
 ///
 /// These normally have a .mca extension on disk.  They contain up to 1024 chunks, each containing
 /// a 32-by-32 column of blocks.
 #[allow(dead_code)]
-pub struct RegionFile<T>
-{
+pub struct RegionFile<T> {
     /// Offsets (in bytes, from the beginning of the file) of each chunk.
     /// An offset of zero means the chunk does not exist
     offsets: Vec<u32>,
@@ -24,14 +23,12 @@ pub struct RegionFile<T>
     cursor: Box<T>,
 }
 
-
-
-impl<R> RegionFile<R> where R: Read + Seek
+impl<R> RegionFile<R>
+where
+    R: Read + Seek,
 {
     /// Parses a region file
     pub fn new(mut r: R) -> Result<RegionFile<R>, nbt_error::Error> {
-
-
         let mut offsets = Vec::with_capacity(1024);
         let mut timestamps = Vec::with_capacity(1024);
         let mut chunk_size = Vec::with_capacity(1024);
@@ -45,7 +42,6 @@ impl<R> RegionFile<R> where R: Read + Seek
 
             offsets.push(offset * 4096);
             chunk_size.push(sector_count);
-
         }
 
         for _ in 0..1024 {
@@ -115,7 +111,7 @@ impl<R> RegionFile<R> where R: Read + Seek
         let compression_type = self.cursor.read_u8()?;
 
         if compression_type != 2 {
-            return Err(nbt_error::Error::UnsupportedCompressionFormat{compression_type});
+            return Err(nbt_error::Error::UnsupportedCompressionFormat { compression_type });
         }
 
         let compressed_data = {
@@ -129,17 +125,15 @@ impl<R> RegionFile<R> where R: Read + Seek
 
         let (_, tag) = nbt::Tag::parse(&mut decoder).unwrap();
         Ok(tag)
-
     }
 }
-
 
 #[test]
 fn test_region() {
     // The values used in the assertions in this test were gotten from the nbt.py impl in
     // Minecraft-Overviewer
-    use std::fs::File;
     use nbt::Taglike;
+    use std::fs::File;
 
     let f = File::open("tests/data/r.0.0.mca").unwrap();
     let mut region = RegionFile::new(f).unwrap();
@@ -152,7 +146,6 @@ fn test_region() {
 
     let ts = region.get_chunk_timestamp(14, 10).unwrap();
     assert_eq!(ts, 1383443713);
-
 
     assert!(region.chunk_exists(14, 10));
     assert!(!region.chunk_exists(15, 15));
