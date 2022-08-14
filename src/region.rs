@@ -1,6 +1,5 @@
 use std::io::{Read, Seek, Cursor, SeekFrom};
 use byteorder::{BigEndian, ReadBytesExt};
-use flate2;
 
 use crate::nbt;
 use crate::error as nbt_error;
@@ -55,9 +54,9 @@ impl<R> RegionFile<R> where R: Read + Seek
         }
 
         Ok(RegionFile {
-            offsets: offsets,
-            timestamps: timestamps,
-            chunk_size: chunk_size,
+            offsets,
+            timestamps,
+            chunk_size,
             cursor: Box::new(r),
         })
     }

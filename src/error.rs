@@ -35,19 +35,16 @@ impl From<io::Error> for Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        match self {
-            &Error::Io(..) => "IO Error",
-            &Error::BadEncoding(..) => "Bad Encoding",
-            &Error::UnexpectedEOF => "Unexpected EOF",
-            &Error::UnexpectedTag(..) => "Unexpected Tag",
-            &Error::UnsupportedCompressionFormat{ compression_type: _ } => "Unsupported Compression",
-        }
-    }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "NBTError: {}", self)
+        match self {
+            Error::Io(..) => write!(f, "IO Error"),
+            Error::BadEncoding(..) => write!(f, "Bad Encoding"),
+            Error::UnexpectedEOF => write!(f, "Unexpected EOF"),
+            Error::UnexpectedTag(..) => write!(f, "Unexpected Tag"),
+            Error::UnsupportedCompressionFormat{ compression_type: _ } => write!(f, "Unsupported Compression"),
+        }
     }
 }

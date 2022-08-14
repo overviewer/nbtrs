@@ -242,19 +242,19 @@ impl Tag {
 
     pub fn get_name(&self) -> &'static str {
         match self {
-            &Tag::TagEnd => "TAG_End",
-            &Tag::TagByte(_) => "TAG_Byte",
-            &Tag::TagShort(_) => "TAG_Short",
-            &Tag::TagInt(_) => "TAG_Int",
-            &Tag::TagLong(_) => "TAG_Long",
-            &Tag::TagFloat(_) => "TAG_Float",
-            &Tag::TagDouble(_) => "TAG_Double",
-            &Tag::TagByteArray(_) => "TAG_ByteArray",
-            &Tag::TagString(_) => "TAG_String",
-            &Tag::TagList(_) => "TAG_List",
-            &Tag::TagCompound(_) => "TAG_Compound",
-            &Tag::TagIntArray(_) => "TAG_IntArray",
-            &Tag::TagLongArray(_) => "TAG_LongArray"
+            Tag::TagEnd => "TAG_End",
+            Tag::TagByte(_) => "TAG_Byte",
+            Tag::TagShort(_) => "TAG_Short",
+            Tag::TagInt(_) => "TAG_Int",
+            Tag::TagLong(_) => "TAG_Long",
+            Tag::TagFloat(_) => "TAG_Float",
+            Tag::TagDouble(_) => "TAG_Double",
+            Tag::TagByteArray(_) => "TAG_ByteArray",
+            Tag::TagString(_) => "TAG_String",
+            Tag::TagList(_) => "TAG_List",
+            Tag::TagCompound(_) => "TAG_Compound",
+            Tag::TagIntArray(_) => "TAG_IntArray",
+            Tag::TagLongArray(_) => "TAG_LongArray"
         }
     }
 
@@ -262,7 +262,7 @@ impl Tag {
         let name_s = name.map_or("".to_string(), |s| format!("(\"{}\")", s));
 
         match self {
-            &Tag::TagCompound(ref v) => {
+            Tag::TagCompound(ref v) => {
                 println!("{1:0$}{2}{3} : {4} entries\n{1:0$}{{",
                          indent,
                          "",
@@ -274,7 +274,7 @@ impl Tag {
                 }
                 println!("{1:0$}}}", indent, "");
             }
-            &Tag::TagList(ref data) => {
+            Tag::TagList(ref data) => {
                 let end = Tag::TagEnd;
                 let ex = data.get(0).unwrap_or(&end);
                 println!("{1:0$}{2}{3} : {4} entries of type {5}\n{1:0$}{{",
@@ -289,10 +289,10 @@ impl Tag {
                 }
                 println!("{1:0$}}}", indent, "");
             }
-            &Tag::TagString(ref s) => {
+            Tag::TagString(ref s) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, s)
             }
-            &Tag::TagByteArray(ref data) => {
+            Tag::TagByteArray(ref data) => {
                 println!("{1:0$}{2}{3} : Length of {4}",
                          indent,
                          "",
@@ -300,28 +300,28 @@ impl Tag {
                          name_s,
                          data.len());
             }
-            &Tag::TagDouble(d) => {
+            Tag::TagDouble(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
             }
-            &Tag::TagFloat(d) => {
+            Tag::TagFloat(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
             }
-            &Tag::TagLong(d) => {
+            Tag::TagLong(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
             }
-            &Tag::TagInt(d) => {
+            Tag::TagInt(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
             }
-            &Tag::TagShort(d) => {
+            Tag::TagShort(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
             }
-            &Tag::TagByte(d) => {
+            Tag::TagByte(d) => {
                 println!("{1:0$}{2}{3} : {4}", indent, "", self.get_name(), name_s, d);
             }
-            &Tag::TagEnd => {
+            Tag::TagEnd => {
                 println!("{1:0$}{2}{3}", indent, "", self.get_name(), name_s);
             }
-            &Tag::TagIntArray(ref data) => {
+            Tag::TagIntArray(ref data) => {
                 println!("{1:0$}{2}{3} : Length of {4}",
                          indent,
                          "",
@@ -329,7 +329,7 @@ impl Tag {
                          name_s,
                          data.len());
             }
-            &Tag::TagLongArray(ref data) => {
+            Tag::TagLongArray(ref data) => {
                 println!("{1:0$}{2}{3} : Length of {4}",
                          indent,
                          "",
@@ -393,27 +393,27 @@ mod test {
 
     #[test]
     fn test_tag_byte() {
-        let data = vec![1, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 69];
+        let data = vec![1, 0, 5, b'h', b'e', b'l', b'l', b'o', 69];
         test_tag(data, "hello", Tag::TagByte(69));
     }
 
     #[test]
     fn test_tag_byte_array() {
-        let data = vec![7, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 0, 0,
+        let data = vec![7, 0, 5, b'h', b'e', b'l', b'l', b'o', 0, 0, 0,
                         3, 69, 250, 123];
         test_tag(data, "hello", Tag::TagByteArray(vec![69, 250, 123]));
     }
 
     #[test]
     fn test_tag_string() {
-        let data = vec![8, 0, 5, 'h' as u8, 'e' as u8, 'l' as u8, 'l' as u8, 'o' as u8, 0, 3,
-                        'c' as u8, 'a' as u8, 't' as u8];
+        let data = vec![8, 0, 5, b'h', b'e', b'l', b'l', b'o', 0, 3,
+                        b'c', b'a', b't'];
         test_tag(data, "hello", Tag::TagString("cat".to_string()));
     }
 
     #[test]
     fn test_tag_list() {
-        let data = vec![9, 0, 2, 'h' as u8, 'i' as u8, 1, 0, 0, 0, 3, 1, 2, 3];
+        let data = vec![9, 0, 2, b'h', b'i', 1, 0, 0, 0, 3, 1, 2, 3];
         test_tag(data,
                  "hi",
                  Tag::TagList(vec![Tag::TagByte(1), Tag::TagByte(2), Tag::TagByte(3)]));
