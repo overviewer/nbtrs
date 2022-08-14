@@ -67,11 +67,9 @@ where
         assert!(x < 32);
         assert!(z < 32);
         let idx = x as usize % 32 + (z as usize % 32) * 32;
-        if idx < self.timestamps.len() {
-            Some(self.timestamps[idx])
-        } else {
-            None
-        }
+        self.timestamps
+            .get(idx)
+            .and_then(|&ts| if ts == 0 { None } else { Some(ts) })
     }
 
     /// Returns the byte-offset for a given chunk (as measured from the start of the file).
@@ -140,8 +138,9 @@ fn test_region() {
     let ts = region.get_chunk_timestamp(0, 0).unwrap();
     assert_eq!(ts, 1383443712);
 
-    let ts = region.get_chunk_timestamp(13, 23).unwrap();
-    assert_eq!(ts, 0);
+    let ts = region.get_chunk_timestamp(13, 23);
+    assert_eq!(ts, None);
+    assert!(!region.chunk_exists(13, 23));
 
     let ts = region.get_chunk_timestamp(14, 10).unwrap();
     assert_eq!(ts, 1383443713);
